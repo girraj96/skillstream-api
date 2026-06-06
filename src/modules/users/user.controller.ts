@@ -6,16 +6,15 @@ import z, { ZodError } from "zod";
 export async function createUserHandler(req: Request, res: Response) {
   const result = createUserSchema.safeParse(req.body);
   if (!result.success) {
-    if (result.error instanceof ZodError) {
-      return res.status(400).json({
-        error: "Validation failed",
-        details: z.treeifyError(result.error),
-      });
-    }
-  } else {
-    const response = await createUser(result.data);
-    return res.status(201).json(response);
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: z.treeifyError(result.error),
+    });
   }
+  const response = await createUser(result.data);
+  return res.status(201).json({
+    data: response,
+  });
 }
 
 export async function getAllUsersHandler(req: Request, res: Response) {

@@ -25,6 +25,6 @@ export async function getAllUsers() {
 export async function getUserId(id: string) {
   const foundUser = users.find((user) => user.id === id);
 
-  if (!foundUser) throw new AppError(404, "User not found!");
+  if (!foundUser) throw new AppError(404, "User not found");
   return foundUser;
 }
