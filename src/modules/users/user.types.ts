@@ -1,8 +1,10 @@
-import { UUID } from "node:crypto";
-
 export interface User {
-  id?: UUID;
   name: string;
   email: string;
-  role?: string;
+  role?: "developer" | "student" | "admin";
+}
+
+export interface PaginationMap {
+  limit: number;
+  page: number;
 }

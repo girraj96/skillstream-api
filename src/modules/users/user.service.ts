@@ -1,29 +1,52 @@
+import { prisma } from "../../db/prisma";
 import AppError from "../../errors/app-error";
-import { User } from "./user.types";
-import { randomUUID } from "node:crypto";
-
-let users: User[] = [];
+import { Prisma } from "../../generated/prisma/client";
+import { PaginationMap, User } from "./user.types";
 
 export async function createUser(input: User) {
-  const id = randomUUID();
+  try {
+    const createdUser = await prisma.user.create({
+      data: input,
+    });
+    return createdUser;
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      throw new AppError(409, "Email already exists");
+    }
 
-  const user: User = {
-    id: id,
-    role: "developer",
-    ...input,
-  };
-
-  users.push(user);
-
-  return user;
+    throw error;
+  }
 }
 
-export async function getAllUsers() {
-  return users;
+export async function getAllUsers(input: PaginationMap) {
+  const allUsers = await prisma.user.findMany({
+    skip: (input.page - 1) * input.limit,
+    take: input.limit,
+  });
+
+  const count = await prisma.user.count();
+  return {
+    data: allUsers,
+    meta: {
+      ...input,
+      total: count,
+      totalPages: Math.ceil(count / (input.limit || 1)),
+    },
+  };
 }
 
 export async function getUserId(id: string) {
-  const foundUser = users.find((user) => user.id === id);
+  const userId = Number(id);
+
+  if (isNaN(userId)) throw new AppError(400, "Invalid user id");
+  const foundUser = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
 
   if (!foundUser) throw new AppError(404, "User not found");
   return foundUser;
