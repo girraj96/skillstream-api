@@ -13,4 +13,6 @@ export const paginationSchema = z.object({
     .enum(["id", "email", "name", "createdAt", "updatedAt"])
     .default("createdAt"),
   sortOrder: z.enum(["asc", "desc"]).default("desc"),
+  role: z.enum(["developer", "student", "admin"])?.optional(),
+  q: z.string().min(2).max(50).optional(),
 });

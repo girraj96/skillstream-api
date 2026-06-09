@@ -22,7 +22,20 @@ export async function createUser(input: User) {
 }
 
 export async function getAllUsers(input: PaginationMap) {
+  const where: Prisma.UserWhereInput = {};
+
+  if (input.role) {
+    where.role = input.role;
+  }
+
+  const q = input.q?.trim();
+
+  if (q) {
+    where.OR = [{ name: { contains: q } }, { email: { contains: q } }];
+  }
+
   const allUsers = await prisma.user.findMany({
+    where,
     skip: (input.page - 1) * input.limit,
     take: input.limit,
     orderBy: {
@@ -30,7 +43,7 @@ export async function getAllUsers(input: PaginationMap) {
     },
   });
 
-  const count = await prisma.user.count();
+  const count = await prisma.user.count({ where });
   return {
     data: allUsers,
     meta: {

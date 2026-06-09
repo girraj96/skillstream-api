@@ -9,4 +9,6 @@ export interface PaginationMap {
   page: number;
   sortBy: "id" | "email" | "name" | "createdAt" | "updatedAt";
   sortOrder: "asc" | "desc";
+  role?: "developer" | "student" | "admin";
+  q?: string;
 }
