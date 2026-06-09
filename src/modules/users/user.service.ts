@@ -1,14 +1,13 @@
 import { prisma } from "../../db/prisma";
 import AppError from "../../errors/app-error";
 import { Prisma } from "../../generated/prisma/client";
-import { PaginationMap, User } from "./user.types";
+import { PaginationMap, UpdateUser, User } from "./user.types";
 
 export async function createUser(input: User) {
   try {
-    const createdUser = await prisma.user.create({
+    return await prisma.user.create({
       data: input,
     });
-    return createdUser;
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -24,6 +23,7 @@ export async function createUser(input: User) {
 export async function getAllUsers(input: PaginationMap) {
   const where: Prisma.UserWhereInput = {};
 
+  where.deletedAt = null;
   if (input.role) {
     where.role = input.role;
   }
@@ -54,16 +54,73 @@ export async function getAllUsers(input: PaginationMap) {
   };
 }
 
-export async function getUserId(id: string) {
+export async function getUserById(id: string) {
   const userId = Number(id);
 
   if (isNaN(userId)) throw new AppError(400, "Invalid user id");
-  const foundUser = await prisma.user.findUnique({
+  const foundUser = await prisma.user.findFirst({
     where: {
       id: userId,
+      deletedAt: null,
     },
   });
 
   if (!foundUser) throw new AppError(404, "User not found");
   return foundUser;
+}
+
+export async function updateUser(id: string, input: UpdateUser) {
+  const userId = Number(id);
+
+  if (isNaN(userId)) throw new AppError(400, "Invalid user id");
+
+  try {
+    const foundUser = await prisma.user.findFirst({
+      where: { id: userId, deletedAt: null },
+    });
+
+    if (!foundUser) throw new AppError(404, "User not found");
+
+    return await prisma.user.update({
+      where: { id: userId },
+      data: input,
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      throw new AppError(404, "User not found");
+    }
+
+    throw error;
+  }
+}
+
+export async function deleteUser(id: string) {
+  const userId = Number(id);
+
+  if (isNaN(userId)) throw new AppError(400, "Invalid user id");
+
+  try {
+    const existingUser = await prisma.user.findFirst({
+      where: { id: userId, deletedAt: null },
+    });
+
+    if (!existingUser) throw new AppError(404, "User not found");
+
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { deletedAt: new Date() },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      throw new AppError(404, "User not found");
+    }
+
+    throw error;
+  }
 }

@@ -25,4 +25,5 @@ model User {
   role      Role     @default(developer) 
   createdAt DateTime @default(now())
   updatedAt  DateTime   @updatedAt
+  deletedAt DateTime?
 }

@@ -1,3 +1,8 @@
+export interface UpdateUser {
+  name?: string;
+  role?: "developer" | "student" | "admin";
+}
+
 export interface User {
   name: string;
   email: string;
