@@ -25,6 +25,9 @@ export async function getAllUsers(input: PaginationMap) {
   const allUsers = await prisma.user.findMany({
     skip: (input.page - 1) * input.limit,
     take: input.limit,
+    orderBy: {
+      [input.sortBy]: input.sortOrder,
+    },
   });
 
   const count = await prisma.user.count();

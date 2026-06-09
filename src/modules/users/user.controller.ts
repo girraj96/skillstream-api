@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { createUser, getAllUsers, getUserId } from "./user.service";
 import { createUserSchema, paginationSchema } from "./user.schema";
-import z, { ZodError } from "zod";
+import z from "zod";
 
 export async function createUserHandler(req: Request, res: Response) {
   const result = createUserSchema.safeParse(req.body);

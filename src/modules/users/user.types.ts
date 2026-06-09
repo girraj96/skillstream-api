@@ -7,4 +7,6 @@ export interface User {
 export interface PaginationMap {
   limit: number;
   page: number;
+  sortBy: "id" | "email" | "name" | "createdAt" | "updatedAt";
+  sortOrder: "asc" | "desc";
 }
