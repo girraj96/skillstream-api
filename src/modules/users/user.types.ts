@@ -7,6 +7,7 @@ export interface User {
   name: string;
   email: string;
   role?: "developer" | "student" | "admin";
+  password: string;
 }
 
 export interface PaginationMap {

@@ -1,13 +1,24 @@
 import { prisma } from "../../db/prisma";
 import AppError from "../../errors/app-error";
 import { Prisma } from "../../generated/prisma/client";
+import { toUserResponse } from "./user.mapper";
 import { PaginationMap, UpdateUser, User } from "./user.types";
+import argon2 from "argon2";
 
 export async function createUser(input: User) {
   try {
-    return await prisma.user.create({
-      data: input,
+    const passwordHash = await argon2.hash(input.password);
+
+    const createdUser = await prisma.user.create({
+      data: {
+        email: input.email,
+        name: input.name,
+        role: input.role,
+        passwordHash,
+      },
     });
+
+    return toUserResponse(createdUser);
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -45,11 +56,11 @@ export async function getAllUsers(input: PaginationMap) {
 
   const count = await prisma.user.count({ where });
   return {
-    data: allUsers,
+    data: allUsers.map(toUserResponse),
     meta: {
       ...input,
       total: count,
-      totalPages: Math.ceil(count / (input.limit || 1)),
+      totalPages: Math.ceil(count / input.limit),
     },
   };
 }
@@ -66,7 +77,7 @@ export async function getUserById(id: string) {
   });
 
   if (!foundUser) throw new AppError(404, "User not found");
-  return foundUser;
+  return toUserResponse(foundUser);
 }
 
 export async function updateUser(id: string, input: UpdateUser) {
@@ -81,10 +92,11 @@ export async function updateUser(id: string, input: UpdateUser) {
 
     if (!foundUser) throw new AppError(404, "User not found");
 
-    return await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: input,
     });
+    return toUserResponse(updatedUser);
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&

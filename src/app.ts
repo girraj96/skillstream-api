@@ -3,6 +3,7 @@ import helmet from "helmet";
 import cors from "cors";
 import { userRouter } from "./modules/users/user.routes";
 import { errorHandler } from "./middlewares/error.middleware";
+import { authRouter } from "./modules/auth/auth.routes";
 
 export function createApp() {
   const app = express();
@@ -16,7 +17,7 @@ export function createApp() {
       service: "skillstream-api",
     });
   });
-
+  app.use("/auth", authRouter);
   app.use("/users", userRouter);
   app.use(errorHandler);
 
