@@ -13,7 +13,7 @@ export async function createUser(input: User) {
       data: {
         email: input.email,
         name: input.name,
-        role: input.role,
+        role: "developer",
         passwordHash,
       },
     });

@@ -8,14 +8,25 @@ import {
   updateUserHandler,
 } from "./user.controller";
 import { authMiddleware } from "../../middlewares/auth.middleware";
+import { requireRole } from "../../middlewares/require-role.middleware";
 
 export const userRouter = Router();
 
 userRouter.post("/", createUserHandler);
-userRouter.get("/", getAllUsersHandler);
 
 userRouter.get("/me", authMiddleware, getMeHandler);
+userRouter.get("/", authMiddleware, requireRole("admin"), getAllUsersHandler);
 
-userRouter.get("/:id", getUserByIdHandler);
-userRouter.patch("/:id", updateUserHandler);
-userRouter.delete("/:id", deleteByUserId);
+userRouter.get(
+  "/:id",
+  authMiddleware,
+  requireRole("admin"),
+  getUserByIdHandler,
+);
+userRouter.patch(
+  "/:id",
+  authMiddleware,
+  requireRole("admin"),
+  updateUserHandler,
+);
+userRouter.delete("/:id", authMiddleware, requireRole("admin"), deleteByUserId);

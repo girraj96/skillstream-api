@@ -1,11 +1,12 @@
 import { z } from "zod";
 
-export const createUserSchema = z.object({
-  email: z.email(),
-  name: z.string().min(2).max(50),
-  role: z.enum(["developer", "student", "admin"]).default("developer"),
-  password: z.string().min(8).max(100),
-});
+export const createUserSchema = z
+  .object({
+    email: z.email(),
+    name: z.string().min(2).max(50),
+    password: z.string().min(8).max(100),
+  })
+  .strict();
 
 export const paginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
