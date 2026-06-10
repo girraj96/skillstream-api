@@ -12,6 +12,7 @@ import {
   getUserById,
   updateUser,
 } from "./user.service";
+import AppError from "../../errors/app-error";
 
 export async function createUserHandler(req: Request, res: Response) {
   const result = createUserSchema.safeParse(req.body);
@@ -72,4 +73,12 @@ export async function deleteByUserId(
 ) {
   await deleteUser(req.params.id);
   return res.status(204).send();
+}
+
+export async function getMeHandler(req: Request, res: Response) {
+  if (!req.user) throw new AppError(401, "Unauthorized");
+
+  const response = await getUserById(String(req.user.id));
+
+  return res.status(200).json({ data: response });
 }
