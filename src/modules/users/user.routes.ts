@@ -9,10 +9,11 @@ import {
 } from "./user.controller";
 import { authMiddleware } from "../../middlewares/auth.middleware";
 import { requireRole } from "../../middlewares/require-role.middleware";
+import { signupRateLimiter } from "../../middlewares/rate-limit.middleware";
 
 export const userRouter = Router();
 
-userRouter.post("/", createUserHandler);
+userRouter.post("/", signupRateLimiter, createUserHandler);
 
 userRouter.get("/me", authMiddleware, getMeHandler);
 userRouter.get("/", authMiddleware, requireRole("admin"), getAllUsersHandler);
