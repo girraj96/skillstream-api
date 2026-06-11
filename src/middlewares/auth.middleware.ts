@@ -1,8 +1,8 @@
-import "dotenv/config";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import AppError from "../errors/app-error";
 import { Role } from "../generated/prisma/enums";
+import { env } from "../config/env";
 
 export async function authMiddleware(
   req: Request,
@@ -22,8 +22,7 @@ export async function authMiddleware(
   }
 
   try {
-    const jwtSecret =
-      process.env.JWT_SECRET || "super-secret-for-local-learning";
+    const jwtSecret = env.JWT_SECRET;
 
     const payload = jwt.verify(token, jwtSecret);
 

@@ -1,10 +1,10 @@
-import "dotenv/config";
 import { prisma } from "../../db/prisma";
 import AppError from "../../errors/app-error";
 import { toUserResponse } from "../users/user.mapper";
 import { ChangePassword, LoginUser } from "./auth.types";
 import argon2 from "argon2";
 import jwt, { SignOptions } from "jsonwebtoken";
+import { env } from "../../config/env";
 
 export async function loginUser(input: LoginUser) {
   const foundUser = await prisma.user.findFirst({
@@ -22,9 +22,8 @@ export async function loginUser(input: LoginUser) {
     email: foundUser.email,
     role: foundUser.role,
   };
-  const jwtSecret = process.env.JWT_SECRET || "super-secret-for-local-learning";
-  const jwtExpiresIn = (process.env.JWT_EXPIRES_IN ||
-    "1h") as SignOptions["expiresIn"];
+  const jwtSecret = env.JWT_SECRET;
+  const jwtExpiresIn = (env.JWT_EXPIRES_IN || "1h") as SignOptions["expiresIn"];
 
   const token = jwt.sign(payload, jwtSecret, {
     expiresIn: jwtExpiresIn,
