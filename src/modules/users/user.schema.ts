@@ -27,3 +27,8 @@ export const updateUserSchema = z
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field is required",
   });
+
+export const cursorPaginationSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(50).default(10),
+  cursor: z.coerce.number().int().positive().optional(),
+});

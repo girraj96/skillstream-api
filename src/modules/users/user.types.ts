@@ -18,3 +18,8 @@ export interface PaginationMap {
   role?: "developer" | "student" | "admin";
   q?: string;
 }
+
+export interface CursorPaginationMap {
+  cursor?: number;
+  limit: number;
+}

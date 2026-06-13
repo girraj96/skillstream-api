@@ -2,7 +2,12 @@ import { prisma } from "../../db/prisma";
 import AppError from "../../errors/app-error";
 import { Prisma } from "../../generated/prisma/client";
 import { toUserResponse } from "./user.mapper";
-import { PaginationMap, UpdateUser, User } from "./user.types";
+import {
+  CursorPaginationMap,
+  PaginationMap,
+  UpdateUser,
+  User,
+} from "./user.types";
 import argon2 from "argon2";
 
 export async function createUser(input: User) {
@@ -135,4 +140,36 @@ export async function deleteUser(id: string) {
 
     throw error;
   }
+}
+
+export async function getAllUsersViaCursor(input: CursorPaginationMap) {
+  const where: Prisma.UserWhereInput = {
+    deletedAt: null,
+  };
+
+  if (input.cursor) {
+    where.id = {
+      lt: input.cursor,
+    };
+  }
+
+  const users = await prisma.user.findMany({
+    where,
+    take: input.limit + 1,
+    orderBy: {
+      id: "desc",
+    },
+  });
+
+  const hasNextPage = users.length > input.limit;
+  const pageUsers = hasNextPage ? users.slice(0, input.limit) : users;
+
+  const nextCursor = hasNextPage ? pageUsers[pageUsers.length - 1].id : null;
+  return {
+    data: pageUsers.map(toUserResponse),
+    meta: {
+      ...input,
+      nextCursor: nextCursor,
+    },
+  };
 }

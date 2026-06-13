@@ -3,6 +3,7 @@ import {
   createUserHandler,
   deleteByUserId,
   getAllUsersHandler,
+  getAllUsersViaCursorHandler,
   getMeHandler,
   getUserByIdHandler,
   updateUserHandler,
@@ -17,6 +18,13 @@ userRouter.post("/", signupRateLimiter, createUserHandler);
 
 userRouter.get("/me", authMiddleware, getMeHandler);
 userRouter.get("/", authMiddleware, requireRole("admin"), getAllUsersHandler);
+
+userRouter.get(
+  "/cursor",
+  authMiddleware,
+  requireRole("admin"),
+  getAllUsersViaCursorHandler,
+);
 
 userRouter.get(
   "/:id",

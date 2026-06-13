@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import z from "zod";
 import {
   createUserSchema,
+  cursorPaginationSchema,
   paginationSchema,
   updateUserSchema,
 } from "./user.schema";
@@ -9,6 +10,7 @@ import {
   createUser,
   deleteUser,
   getAllUsers,
+  getAllUsersViaCursor,
   getUserById,
   updateUser,
 } from "./user.service";
@@ -81,4 +83,17 @@ export async function getMeHandler(req: Request, res: Response) {
   const response = await getUserById(String(req.user.id));
 
   return res.status(200).json({ data: response });
+}
+
+export async function getAllUsersViaCursorHandler(req: Request, res: Response) {
+  const result = cursorPaginationSchema.safeParse(req.query);
+  if (!result.success) {
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: z.treeifyError(result.error),
+    });
+  }
+  const response = await getAllUsersViaCursor(result.data);
+
+  return res.status(200).json(response);
 }

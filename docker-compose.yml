@@ -13,5 +13,17 @@ services:
     volumes:
       - skillstream_mysql_data:/var/lib/mysql
 
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    container_name: skillstream_phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+
 volumes:
   skillstream_mysql_data:
