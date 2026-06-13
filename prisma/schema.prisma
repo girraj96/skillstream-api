@@ -27,4 +27,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt  DateTime   @updatedAt
   deletedAt DateTime?
+  @@index([deletedAt, createdAt])
+  @@index([role, deletedAt])
+
 }

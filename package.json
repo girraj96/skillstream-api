@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "migration": "yarn prisma migrate dev --name [MIGRATION_COMMENT]",
-    "docker:up": "docker compose up -d"
+    "docker:up": "docker compose up -d",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.8.0",
@@ -25,8 +27,11 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.9.1",
+    "@types/supertest": "^7.2.0",
     "prisma": "^7.8.0",
+    "supertest": "^7.2.2",
     "tsx": "^4.22.3",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
   }
 }
