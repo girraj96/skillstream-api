@@ -5,6 +5,7 @@ import { userRouter } from "./modules/users/user.routes";
 import { errorHandler } from "./middlewares/error.middleware";
 import { authRouter } from "./modules/auth/auth.routes";
 import { requestLogger } from "./middlewares/request-logger.middleware";
+import { postRouter } from "./modules/posts/post.routes";
 
 export function createApp() {
   const app = express();
@@ -21,6 +22,7 @@ export function createApp() {
   });
   app.use("/auth", authRouter);
   app.use("/users", userRouter);
+  app.use("/posts", postRouter);
   app.use(errorHandler);
 
   return app;
