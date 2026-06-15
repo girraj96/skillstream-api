@@ -1,11 +1,11 @@
 import { prisma } from "../../db/prisma";
 import AppError from "../../errors/app-error";
 import { Prisma } from "../../generated/prisma/client";
-import { toPostResponse } from "./post.mapper";
+import { toFeedPostResponse, toPostResponse } from "./post.mapper";
 import { CursorPostsPaginationMap, Post, UpdatePost } from "./post.types";
 
 export async function createPost(input: Post, authorId: string) {
-  const createdUser = await prisma.post.create({
+  const createdPost = await prisma.post.create({
     data: {
       title: input.title,
       content: input.content,
@@ -13,7 +13,7 @@ export async function createPost(input: Post, authorId: string) {
     },
   });
 
-  return toPostResponse(createdUser);
+  return toPostResponse(createdPost);
 }
 
 export async function getMyPosts(authorId: string) {
@@ -106,6 +106,9 @@ export async function getFeed(input: CursorPostsPaginationMap) {
     orderBy: {
       id: "desc",
     },
+    include: {
+      author: true,
+    },
   });
 
   const hasNextPage = feedPosts.length > input.limit;
@@ -113,7 +116,7 @@ export async function getFeed(input: CursorPostsPaginationMap) {
   const pagePosts = hasNextPage ? feedPosts.slice(0, input.limit) : feedPosts;
   const nextCursor = hasNextPage ? pagePosts[pagePosts.length - 1].id : null;
   return {
-    data: pagePosts.map(toPostResponse),
+    data: pagePosts.map(toFeedPostResponse),
 
     meta: {
       ...input,

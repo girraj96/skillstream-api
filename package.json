@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "migration": "yarn prisma migrate dev --name [MIGRATION_COMMENT]",
+    "generate": "yarn prisma generate",
     "docker:up": "docker compose up -d",
     "test": "vitest run",
     "test:watch": "vitest"
