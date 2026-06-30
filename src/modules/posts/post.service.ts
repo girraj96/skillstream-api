@@ -1,8 +1,14 @@
 import { prisma } from "../../db/prisma";
 import AppError from "../../errors/app-error";
 import { Prisma } from "../../generated/prisma/client";
+import { getPostStatsByPostIds } from "../../utils/helper";
 import { toFeedPostResponse, toPostResponse } from "./post.mapper";
-import { CursorPostsPaginationMap, Post, UpdatePost } from "./post.types";
+import {
+  CursorPostSearchPaginationMap,
+  CursorPostsPaginationMap,
+  Post,
+  UpdatePost,
+} from "./post.types";
 
 export async function createPost(input: Post, authorId: string) {
   const createdPost = await prisma.post.create({
@@ -89,7 +95,10 @@ export async function deletePost(postId: string, authorId: string) {
   });
 }
 
-export async function getFeed(input: CursorPostsPaginationMap) {
+export async function getFeed(
+  input: CursorPostsPaginationMap,
+  uId: number | undefined,
+) {
   const where: Prisma.PostWhereInput = {
     deletedAt: null,
   };
@@ -114,12 +123,89 @@ export async function getFeed(input: CursorPostsPaginationMap) {
   const hasNextPage = feedPosts.length > input.limit;
 
   const pagePosts = hasNextPage ? feedPosts.slice(0, input.limit) : feedPosts;
+
+  const postIds = pagePosts.map((post) => post.id);
+
   const nextCursor = hasNextPage ? pagePosts[pagePosts.length - 1].id : null;
+  const {
+    likesCountByPostId,
+    commentsCountByPostId,
+    likedPostIds,
+    savedPostIds,
+  } = await getPostStatsByPostIds(postIds, uId);
   return {
-    data: pagePosts.map(toFeedPostResponse),
+    data: pagePosts.map((post) =>
+      toFeedPostResponse(
+        post,
+        {
+          likesCount: likesCountByPostId.get(post.id) ?? 0,
+          commentsCount: commentsCountByPostId.get(post.id) ?? 0,
+        },
+        { liked: likedPostIds.has(post.id), saved: savedPostIds.has(post.id) },
+      ),
+    ),
 
     meta: {
-      ...input,
+      limit: input.limit,
+      nextCursor: nextCursor,
+    },
+  };
+}
+
+export async function searchPosts(
+  input: CursorPostSearchPaginationMap,
+  uId: number | undefined,
+) {
+  const where: Prisma.PostWhereInput = {
+    deletedAt: null,
+    OR: [{ title: { contains: input.q } }, { content: { contains: input.q } }],
+  };
+
+  if (input.cursor) {
+    where.id = {
+      lt: input.cursor,
+    };
+  }
+
+  const feedPosts = await prisma.post.findMany({
+    where,
+    take: input.limit + 1,
+    orderBy: {
+      id: "desc",
+    },
+    include: {
+      author: true,
+    },
+  });
+
+  const hasNextPage = feedPosts.length > input.limit;
+
+  const pagePosts = hasNextPage ? feedPosts.slice(0, input.limit) : feedPosts;
+
+  const postIds = pagePosts.map((post) => post.id);
+
+  const nextCursor = hasNextPage ? pagePosts[pagePosts.length - 1].id : null;
+
+  const {
+    likesCountByPostId,
+    commentsCountByPostId,
+    likedPostIds,
+    savedPostIds,
+  } = await getPostStatsByPostIds(postIds, uId);
+  return {
+    data: pagePosts.map((post) =>
+      toFeedPostResponse(
+        post,
+        {
+          likesCount: likesCountByPostId.get(post.id) ?? 0,
+          commentsCount: commentsCountByPostId.get(post.id) ?? 0,
+        },
+        { liked: likedPostIds.has(post.id), saved: savedPostIds.has(post.id) },
+      ),
+    ),
+
+    meta: {
+      limit: input.limit,
       nextCursor: nextCursor,
     },
   };

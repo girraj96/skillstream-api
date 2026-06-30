@@ -29,6 +29,10 @@ model User {
   deletedAt DateTime?
   posts        Post[]
   comments Comment[]
+  postLikes PostLike[]
+  savedPosts SavedPost[]
+  followers UserFollow[] @relation("UserFollowing")
+  following UserFollow[] @relation("UserFollowers")
   @@index([deletedAt, createdAt])
   @@index([role, deletedAt])
 
@@ -45,6 +49,8 @@ model Post {
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
   comments Comment[]
+  likes PostLike[]
+  savedPosts SavedPost[]
   @@index([authorId, deletedAt, createdAt])
 }
 
@@ -65,4 +71,54 @@ model Comment {
 
   @@index([postId, deletedAt, createdAt])
   @@index([authorId, deletedAt, createdAt])
+}
+
+
+model PostLike {
+  id        Int      @id @default(autoincrement())
+
+  postId    Int
+  userId    Int
+
+  post      Post     @relation(fields: [postId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model SavedPost {
+  id        Int      @id @default(autoincrement())
+
+  userId    Int
+  postId    Int
+
+  user      User     @relation(fields: [userId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([userId, createdAt])
+  @@index([postId, createdAt])
+}
+
+
+model UserFollow {
+  id          Int      @id @default(autoincrement())
+
+  followerId Int
+  followingId Int
+
+  follower   User     @relation("UserFollowers", fields: [followerId], references: [id])
+  following  User     @relation("UserFollowing", fields: [followingId], references: [id])
+
+  createdAt  DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId, createdAt])
+  @@index([followingId, createdAt])
 }

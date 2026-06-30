@@ -12,3 +12,9 @@ export interface CursorPostsPaginationMap {
   cursor?: number;
   limit: number;
 }
+
+export interface CursorPostSearchPaginationMap {
+  cursor?: number;
+  limit: number;
+  q: string;
+}

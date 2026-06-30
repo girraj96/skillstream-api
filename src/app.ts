@@ -7,6 +7,8 @@ import { authRouter } from "./modules/auth/auth.routes";
 import { requestLogger } from "./middlewares/request-logger.middleware";
 import { postRouter } from "./modules/posts/post.routes";
 import { commentRouter } from "./modules/comments/comment.routes";
+import { likeRouter } from "./modules/likes/like.routes";
+import { savePostRouter } from "./modules/saved-posts/saved-post.routes";
 
 export function createApp() {
   const app = express();
@@ -25,6 +27,8 @@ export function createApp() {
   app.use("/users", userRouter);
   app.use("/posts", postRouter);
   app.use("/posts", commentRouter);
+  app.use("/posts", likeRouter);
+  app.use(savePostRouter);
   app.use(errorHandler);
 
   return app;

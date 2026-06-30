@@ -21,3 +21,9 @@ export const cursorPostsPaginationSchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(10),
   cursor: z.coerce.number().int().positive().optional(),
 });
+
+export const cursorPostsSearchSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(50).default(10),
+  cursor: z.coerce.number().int().positive().optional(),
+  q: z.string().min(2).max(100),
+});

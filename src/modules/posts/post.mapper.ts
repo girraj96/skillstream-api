@@ -11,7 +11,11 @@ export const toPostResponse = (post: Post) => {
   };
 };
 
-export const toFeedPostResponse = (post: Post & { author: User }) => {
+export const toFeedPostResponse = (
+  post: Post & { author: User },
+  stats: { likesCount: number; commentsCount: number },
+  viewer: { liked: boolean; saved: boolean },
+) => {
   return {
     id: post.id,
     title: post.title,
@@ -22,6 +26,8 @@ export const toFeedPostResponse = (post: Post & { author: User }) => {
       name: post.author.name,
       role: post.author.role,
     },
+    stats,
+    viewer,
     createdAt: post.createdAt,
     updatedAt: post.updatedAt,
   };

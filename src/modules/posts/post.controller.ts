@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {
   createPostSchema,
   cursorPostsPaginationSchema,
+  cursorPostsSearchSchema,
   updatePostSchema,
 } from "./post.schema";
 import z from "zod";
@@ -10,6 +11,7 @@ import {
   deletePost,
   getFeed,
   getMyPosts,
+  searchPosts,
   updatePost,
 } from "./post.service";
 import AppError from "../../errors/app-error";
@@ -77,6 +79,19 @@ export async function feedHandler(req: Request, res: Response) {
     });
   }
 
-  const response = await getFeed(result.data);
+  const response = await getFeed(result.data, req.user?.id);
+  return res.status(200).json(response);
+}
+
+export async function searchPostHandler(req: Request, res: Response) {
+  const result = cursorPostsSearchSchema.safeParse(req.query);
+  if (!result.success) {
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: z.treeifyError(result.error),
+    });
+  }
+
+  const response = await searchPosts(result.data, req.user?.id);
   return res.status(200).json(response);
 }
