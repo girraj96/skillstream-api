@@ -14,28 +14,33 @@ import { signupRateLimiter } from "../../middlewares/rate-limit.middleware";
 
 export const userRouter = Router();
 
-userRouter.post("/", signupRateLimiter, createUserHandler);
+userRouter.post("/users/", signupRateLimiter, createUserHandler);
 
-userRouter.get("/me", authMiddleware, getMeHandler);
+userRouter.get("/users/me", authMiddleware, getMeHandler);
 userRouter.get("/", authMiddleware, requireRole("admin"), getAllUsersHandler);
 
 userRouter.get(
-  "/cursor",
+  "/users/cursor",
   authMiddleware,
   requireRole("admin"),
   getAllUsersViaCursorHandler,
 );
 
 userRouter.get(
-  "/:id",
+  "/users/:id",
   authMiddleware,
   requireRole("admin"),
   getUserByIdHandler,
 );
 userRouter.patch(
-  "/:id",
+  "/users/:id",
   authMiddleware,
   requireRole("admin"),
   updateUserHandler,
 );
-userRouter.delete("/:id", authMiddleware, requireRole("admin"), deleteByUserId);
+userRouter.delete(
+  "/users/:id",
+  authMiddleware,
+  requireRole("admin"),
+  deleteByUserId,
+);

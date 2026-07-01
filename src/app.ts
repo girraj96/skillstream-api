@@ -9,6 +9,7 @@ import { postRouter } from "./modules/posts/post.routes";
 import { commentRouter } from "./modules/comments/comment.routes";
 import { likeRouter } from "./modules/likes/like.routes";
 import { savePostRouter } from "./modules/saved-posts/saved-post.routes";
+import { followRouter } from "./modules/follows/follow.routes";
 
 export function createApp() {
   const app = express();
@@ -23,12 +24,13 @@ export function createApp() {
       service: "skillstream-api",
     });
   });
-  app.use("/auth", authRouter);
-  app.use("/users", userRouter);
-  app.use("/posts", postRouter);
-  app.use("/posts", commentRouter);
-  app.use("/posts", likeRouter);
+  app.use(authRouter);
+  app.use(userRouter);
+  app.use(postRouter);
+  app.use(commentRouter);
+  app.use(likeRouter);
   app.use(savePostRouter);
+  app.use(followRouter);
   app.use(errorHandler);
 
   return app;

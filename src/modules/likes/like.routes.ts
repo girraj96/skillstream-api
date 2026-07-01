@@ -10,6 +10,6 @@ import {
 
 export const likeRouter = Router();
 
-likeRouter.put("/:postId/like", authMiddleware, likePostHandler);
-likeRouter.delete("/:postId/like", authMiddleware, deleteLikeHandler);
-likeRouter.get("/:postId/likes/count", getPostLikesCountHandler);
+likeRouter.put("/posts/:postId/like", authMiddleware, likePostHandler);
+likeRouter.delete("/posts/:postId/like", authMiddleware, deleteLikeHandler);
+likeRouter.get("/posts/:postId/likes/count", getPostLikesCountHandler);

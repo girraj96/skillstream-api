@@ -4,9 +4,9 @@ import { authMiddleware } from "../../middlewares/auth.middleware";
 import { authRateLimiter } from "../../middlewares/rate-limit.middleware";
 
 export const authRouter = Router();
-authRouter.post("/login", authRateLimiter, loginHandler);
+authRouter.post("/auth/login", authRateLimiter, loginHandler);
 authRouter.patch(
-  "/change-password",
+  "/auth/change-password",
   authRateLimiter,
   authMiddleware,
   changePasswordHandler,

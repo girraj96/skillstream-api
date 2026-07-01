@@ -9,5 +9,9 @@ import {
 
 export const commentRouter = Router();
 
-commentRouter.post("/:postId/comments", authMiddleware, addCommentHandler);
-commentRouter.get("/:postId/comments", getPostCommentsHandler);
+commentRouter.post(
+  "/posts/:postId/comments",
+  authMiddleware,
+  addCommentHandler,
+);
+commentRouter.get("/posts/:postId/comments", getPostCommentsHandler);
