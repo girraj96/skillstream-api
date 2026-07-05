@@ -86,3 +86,21 @@ export async function readNotification(nId: string, uId: string) {
     data: notification,
   };
 }
+
+export async function unReadNotificationCount(uId: string) {
+  const userId = Number(uId);
+
+  if (Number.isNaN(userId)) {
+    throw new AppError(400, "Invalid notification id");
+  }
+
+  const notificationCount = await prisma.notification.count({
+    where: { userId, readAt: null },
+  });
+
+  return {
+    data: {
+      unreadCount: notificationCount,
+    },
+  };
+}

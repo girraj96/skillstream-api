@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import AppError from "../../errors/app-error";
-import { getNotifications, readNotification } from "./notification.service";
+import {
+  getNotifications,
+  readNotification,
+  unReadNotificationCount,
+} from "./notification.service";
 import z from "zod";
 import { cursorPaginationSchema } from "../../utils/schema";
 
@@ -26,5 +30,15 @@ export async function readNotificationHandler(
   if (!req.user) throw new AppError(401, "Unauthorized");
 
   const response = await readNotification(req.params.id, String(req.user.id));
+  return res.status(200).json(response);
+}
+
+export async function unreadNotificationCountHandler(
+  req: Request,
+  res: Response,
+) {
+  if (!req.user) throw new AppError(401, "Unauthorized");
+
+  const response = await unReadNotificationCount(String(req.user.id));
   return res.status(200).json(response);
 }
