@@ -1,7 +1,7 @@
 import { prisma } from "../../db/prisma";
 import AppError from "../../errors/app-error";
 import { Prisma } from "../../generated/prisma/client";
-import { toUserResponse } from "./user.mapper";
+import { toProfileResponse, toUserResponse } from "./user.mapper";
 import {
   CursorPaginationMap,
   PaginationMap,
@@ -171,5 +171,49 @@ export async function getAllUsersViaCursor(input: CursorPaginationMap) {
       ...input,
       nextCursor: nextCursor,
     },
+  };
+}
+
+export async function getProfile(pId: string, uId: number | undefined) {
+  const profileId = Number(pId);
+
+  if (isNaN(profileId)) throw new AppError(400, "Invalid user id");
+
+  const profileFound = await prisma.user.findFirst({
+    where: {
+      id: profileId,
+      deletedAt: null,
+    },
+  });
+
+  if (!profileFound) throw new AppError(404, "User not found");
+
+  const profileFollowerCount = await prisma.userFollow.count({
+    where: { followingId: profileId },
+  });
+
+  const profileFollowingCount = await prisma.userFollow.count({
+    where: { followerId: profileId },
+  });
+
+  const userFollowingFound =
+    uId && uId !== profileId
+      ? await prisma.userFollow.findFirst({
+          where: {
+            followerId: uId,
+            followingId: profileId,
+          },
+        })
+      : false;
+
+  return {
+    data: toProfileResponse(
+      profileFound,
+      {
+        followersCount: profileFollowerCount,
+        followingCount: profileFollowingCount,
+      },
+      { isFollowing: !!userFollowingFound, isSelf: uId === profileId },
+    ),
   };
 }

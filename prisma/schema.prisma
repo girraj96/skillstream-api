@@ -33,6 +33,8 @@ model User {
   savedPosts SavedPost[]
   followers UserFollow[] @relation("UserFollowing")
   following UserFollow[] @relation("UserFollowers")
+  notificationsReceived Notification[] @relation("NotificationUser")
+  notificationsActed    Notification[] @relation("NotificationActor")
   @@index([deletedAt, createdAt])
   @@index([role, deletedAt])
 
@@ -121,4 +123,24 @@ model UserFollow {
   @@unique([followerId, followingId])
   @@index([followerId, createdAt])
   @@index([followingId, createdAt])
+}
+
+
+
+enum NotificationType {
+  follow
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  actorId   Int
+  type      NotificationType
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user      User             @relation("NotificationUser", fields: [userId], references: [id])
+  actor     User             @relation("NotificationActor", fields: [actorId], references: [id])
+
+  @@index([userId, readAt, createdAt])
 }

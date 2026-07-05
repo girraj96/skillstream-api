@@ -11,6 +11,7 @@ import {
   deleteUser,
   getAllUsers,
   getAllUsersViaCursor,
+  getProfile,
   getUserById,
   updateUser,
 } from "./user.service";
@@ -94,6 +95,15 @@ export async function getAllUsersViaCursorHandler(req: Request, res: Response) {
     });
   }
   const response = await getAllUsersViaCursor(result.data);
+
+  return res.status(200).json(response);
+}
+
+export async function getProfileHandler(
+  req: Request<{ id: string }>,
+  res: Response,
+) {
+  const response = await getProfile(req.params.id, req.user?.id);
 
   return res.status(200).json(response);
 }

@@ -10,6 +10,7 @@ import { commentRouter } from "./modules/comments/comment.routes";
 import { likeRouter } from "./modules/likes/like.routes";
 import { savePostRouter } from "./modules/saved-posts/saved-post.routes";
 import { followRouter } from "./modules/follows/follow.routes";
+import { notificationRouter } from "./modules/notifications/notification.routes";
 
 export function createApp() {
   const app = express();
@@ -31,6 +32,7 @@ export function createApp() {
   app.use(likeRouter);
   app.use(savePostRouter);
   app.use(followRouter);
+  app.use(notificationRouter);
   app.use(errorHandler);
 
   return app;

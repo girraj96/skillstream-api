@@ -10,3 +10,17 @@ export const toUserResponse = (user: User) => {
     updatedAt: user.updatedAt,
   };
 };
+
+export const toProfileResponse = (
+  user: User,
+  stats: { followersCount: number; followingCount: number },
+  viewer: { isFollowing: boolean; isSelf: boolean },
+) => {
+  return {
+    id: user.id,
+    name: user.name,
+    role: user.role,
+    stats,
+    viewer,
+  };
+};

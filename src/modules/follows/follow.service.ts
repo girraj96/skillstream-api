@@ -39,11 +39,23 @@ export async function createFollowing(followingUid: string, uId: string) {
 
   if (followerFound) return { data: followerFound };
 
-  const result = await prisma.userFollow.create({
-    data: {
-      followingId: followingId,
-      followerId: followerId,
-    },
+  const result = await prisma.$transaction(async (tx) => {
+    const follow = await tx.userFollow.create({
+      data: {
+        followerId,
+        followingId,
+      },
+    });
+
+    await tx.notification.create({
+      data: {
+        userId: followingId, // person receiving notification
+        actorId: followerId, // person who performed follow
+        type: "follow",
+      },
+    });
+
+    return follow;
   });
 
   return {

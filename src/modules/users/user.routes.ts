@@ -5,12 +5,14 @@ import {
   getAllUsersHandler,
   getAllUsersViaCursorHandler,
   getMeHandler,
+  getProfileHandler,
   getUserByIdHandler,
   updateUserHandler,
 } from "./user.controller";
 import { authMiddleware } from "../../middlewares/auth.middleware";
 import { requireRole } from "../../middlewares/require-role.middleware";
 import { signupRateLimiter } from "../../middlewares/rate-limit.middleware";
+import { optionalAuthMiddleware } from "../../middlewares/optional-auth.middleware";
 
 export const userRouter = Router();
 
@@ -44,3 +46,5 @@ userRouter.delete(
   requireRole("admin"),
   deleteByUserId,
 );
+
+userRouter.get("/users/:id/profile", optionalAuthMiddleware, getProfileHandler);
