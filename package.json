@@ -10,7 +10,8 @@
     "docker:up": "docker compose up -d",
     "test": "vitest run",
     "test:watch": "vitest",
-    "docker:down": "docker stop skillstream_phpmyadmin"
+    "docker:down": "docker stop skillstream_phpmyadmin",
+    "backfill:post-counters": "tsx scripts/backfill-post-counters.ts"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.8.0",
