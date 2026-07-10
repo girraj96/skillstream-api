@@ -127,19 +127,17 @@ export async function getFeed(
   const postIds = pagePosts.map((post) => post.id);
 
   const nextCursor = hasNextPage ? pagePosts[pagePosts.length - 1].id : null;
-  const {
-    likesCountByPostId,
-    commentsCountByPostId,
-    likedPostIds,
-    savedPostIds,
-  } = await getPostStatsByPostIds(postIds, uId);
+  const { likedPostIds, savedPostIds } = await getPostStatsByPostIds(
+    postIds,
+    uId,
+  );
   return {
     data: pagePosts.map((post) =>
       toFeedPostResponse(
         post,
         {
-          likesCount: likesCountByPostId.get(post.id) ?? 0,
-          commentsCount: commentsCountByPostId.get(post.id) ?? 0,
+          likesCount: post.likesCount ?? 0,
+          commentsCount: post.commentsCount ?? 0,
         },
         { liked: likedPostIds.has(post.id), saved: savedPostIds.has(post.id) },
       ),
@@ -186,19 +184,17 @@ export async function searchPosts(
 
   const nextCursor = hasNextPage ? pagePosts[pagePosts.length - 1].id : null;
 
-  const {
-    likesCountByPostId,
-    commentsCountByPostId,
-    likedPostIds,
-    savedPostIds,
-  } = await getPostStatsByPostIds(postIds, uId);
+  const { likedPostIds, savedPostIds } = await getPostStatsByPostIds(
+    postIds,
+    uId,
+  );
   return {
     data: pagePosts.map((post) =>
       toFeedPostResponse(
         post,
         {
-          likesCount: likesCountByPostId.get(post.id) ?? 0,
-          commentsCount: commentsCountByPostId.get(post.id) ?? 0,
+          likesCount: post.likesCount ?? 0,
+          commentsCount: post.commentsCount ?? 0,
         },
         { liked: likedPostIds.has(post.id), saved: savedPostIds.has(post.id) },
       ),

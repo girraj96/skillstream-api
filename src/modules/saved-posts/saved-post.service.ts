@@ -110,12 +110,10 @@ export async function getSavedPosts(
     ? pageSavedPosts[pageSavedPosts.length - 1].id
     : null;
 
-  const {
-    likesCountByPostId,
-    commentsCountByPostId,
-    likedPostIds,
-    savedPostIds,
-  } = await getPostStatsByPostIds(postIds, userId);
+  const { likedPostIds, savedPostIds } = await getPostStatsByPostIds(
+    postIds,
+    userId,
+  );
 
   return {
     data: pageSavedPosts.map((savedPost) => {
@@ -124,8 +122,8 @@ export async function getSavedPosts(
       return toFeedPostResponse(
         post,
         {
-          likesCount: likesCountByPostId.get(post.id) ?? 0,
-          commentsCount: commentsCountByPostId.get(post.id) ?? 0,
+          likesCount: post.likesCount ?? 0,
+          commentsCount: post.commentsCount ?? 0,
         },
         { liked: likedPostIds.has(post.id), saved: savedPostIds.has(post.id) },
       );

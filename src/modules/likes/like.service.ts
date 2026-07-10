@@ -23,14 +23,25 @@ export async function likePost(pId: string, aId: string) {
 
   if (likeFound) return { data: likeFound };
 
-  const newLike = await prisma.postLike.create({
-    data: {
-      userId,
-      postId,
-    },
+  const result = await prisma.$transaction(async (tx) => {
+    const newLike = await tx.postLike.create({
+      data: {
+        userId,
+        postId,
+      },
+    });
+
+    await tx.post.update({
+      where: { id: postId },
+      data: {
+        likesCount: { increment: 1 },
+      },
+    });
+
+    return newLike;
   });
 
-  return { data: newLike };
+  return { data: result };
 }
 
 export async function deleteLike(pId: string, aId: string) {
@@ -54,10 +65,19 @@ export async function deleteLike(pId: string, aId: string) {
   });
 
   if (likeFound) {
-    await prisma.postLike.delete({
-      where: {
-        id: likeFound.id,
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.postLike.delete({
+        where: {
+          id: likeFound.id,
+        },
+      });
+
+      await tx.post.updateMany({
+        where: { id: postId, likesCount: { gt: 0 } },
+        data: {
+          likesCount: { decrement: 1 },
+        },
+      });
     });
   }
   return { data: "Success" };

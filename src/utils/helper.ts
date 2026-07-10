@@ -13,31 +13,6 @@ export async function getPostStatsByPostIds(
     };
   }
 
-  const likeGroups = await prisma.postLike.groupBy({
-    by: ["postId"],
-    where: {
-      postId: {
-        in: postIds,
-      },
-    },
-    _count: {
-      _all: true,
-    },
-  });
-
-  const commentGroups = await prisma.comment.groupBy({
-    by: ["postId"],
-    where: {
-      postId: {
-        in: postIds,
-      },
-      deletedAt: null,
-    },
-    _count: {
-      _all: true,
-    },
-  });
-
   const likedPost = userId
     ? await prisma.postLike.findMany({
         where: { userId, postId: { in: postIds } },
@@ -50,21 +25,33 @@ export async function getPostStatsByPostIds(
       })
     : [];
 
-  const likesCountByPostId = new Map(
-    likeGroups.map((item) => [item.postId, item._count._all]),
-  );
-
-  const commentsCountByPostId = new Map(
-    commentGroups.map((item) => [item.postId, item._count._all]),
-  );
-
   const likedPostIds = new Set(likedPost.map((like) => like.postId));
   const savedPostIds = new Set(savedPosts.map((save) => save.postId));
 
   return {
-    likesCountByPostId,
-    commentsCountByPostId,
     likedPostIds,
     savedPostIds,
+  };
+}
+
+export async function getPostByAuthorIds(authorIds: number[]) {
+  if (authorIds.length === 0) {
+    return {
+      posts: new Set<number>(),
+    };
+  }
+
+  const posts = await prisma.post.findMany({
+    where: { authorId: { in: authorIds } },
+    orderBy: {
+      id: "desc",
+    },
+    include: {
+      author: true,
+    },
+  });
+
+  return {
+    posts,
   };
 }

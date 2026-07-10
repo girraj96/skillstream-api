@@ -18,18 +18,29 @@ export async function addComment(input: Comment, pId: string, aId: string) {
   });
   if (!foundPost) throw new AppError(404, "Post not found");
 
-  const comment = await prisma.comment.create({
-    data: {
-      body: input.body,
-      authorId,
-      postId,
-    },
-    include: {
-      author: true,
-    },
+  const result = await prisma.$transaction(async (tx) => {
+    const comment = await tx.comment.create({
+      data: {
+        body: input.body,
+        authorId,
+        postId,
+      },
+      include: {
+        author: true,
+      },
+    });
+
+    await tx.post.update({
+      where: { id: postId },
+      data: {
+        commentsCount: { increment: 1 },
+      },
+    });
+
+    return comment;
   });
 
-  return toCommentResponse(comment);
+  return toCommentResponse(result);
 }
 
 export async function getPostComments(
