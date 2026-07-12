@@ -3,6 +3,7 @@ import { Router } from "express";
 import { authMiddleware } from "../../middlewares/auth.middleware";
 import {
   getNotificationsHandler,
+  readAllNotificationHandler,
   readNotificationHandler,
   unreadNotificationCountHandler,
 } from "./notification.controller";
@@ -19,6 +20,12 @@ notificationRouter.get(
   authMiddleware,
   unreadNotificationCountHandler,
 );
+notificationRouter.patch(
+  "/notifications/read-all",
+  authMiddleware,
+  readAllNotificationHandler,
+);
+
 notificationRouter.patch(
   "/notifications/:id/read",
   authMiddleware,
