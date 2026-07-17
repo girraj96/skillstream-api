@@ -89,6 +89,17 @@ export async function getSavedPosts(
       post: {
         include: {
           author: true,
+          images: {
+            orderBy: { createdAt: "asc" },
+            select: {
+              id: true,
+              url: true,
+              width: true,
+              height: true,
+              sizeBytes: true,
+              mimeType: true,
+            },
+          },
         },
       },
     },

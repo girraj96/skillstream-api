@@ -117,6 +117,17 @@ export async function getFeed(
     },
     include: {
       author: true,
+      images: {
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          url: true,
+          width: true,
+          height: true,
+          sizeBytes: true,
+          mimeType: true,
+        },
+      },
     },
   });
 
@@ -173,6 +184,17 @@ export async function searchPosts(
     },
     include: {
       author: true,
+      images: {
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          url: true,
+          width: true,
+          height: true,
+          sizeBytes: true,
+          mimeType: true,
+        },
+      },
     },
   });
 

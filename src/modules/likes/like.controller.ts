@@ -18,8 +18,8 @@ export async function deleteLikeHandler(
 ) {
   if (!req.user) throw new AppError(401, "Unauthorized");
 
-  const response = await deleteLike(req.params.postId, String(req.user.id));
-  return res.status(200).json(response);
+  await deleteLike(req.params.postId, String(req.user.id));
+  return res.status(204).send();
 }
 
 export async function getPostLikesCountHandler(

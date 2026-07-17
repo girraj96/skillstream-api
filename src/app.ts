@@ -12,6 +12,7 @@ import { savePostRouter } from "./modules/saved-posts/saved-post.routes";
 import { followRouter } from "./modules/follows/follow.routes";
 import { notificationRouter } from "./modules/notifications/notification.routes";
 import { feedRouter } from "./modules/feed/feed.routes";
+import { postImageRouter } from "./modules/post-images/post-image.routes";
 
 export function createApp() {
   const app = express();
@@ -35,6 +36,7 @@ export function createApp() {
   app.use(followRouter);
   app.use(notificationRouter);
   app.use(feedRouter);
+  app.use(postImageRouter);
   app.use(errorHandler);
 
   return app;

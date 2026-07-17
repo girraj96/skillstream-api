@@ -20,11 +20,8 @@ export async function deleteSavedPostHandler(
 ) {
   if (!req.user) throw new AppError(401, "Unauthorized");
 
-  const response = await deleteSavedPost(
-    req.params.postId,
-    String(req.user.id),
-  );
-  return res.status(200).json(response);
+  await deleteSavedPost(req.params.postId, String(req.user.id));
+  return res.status(204).send();
 }
 
 export async function getSavedPostsHandler(

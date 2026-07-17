@@ -46,6 +46,19 @@ export async function getFollowingFeed(
           role: true,
         },
       },
+      images: {
+        orderBy: {
+          createdAt: "asc",
+        },
+        select: {
+          id: true,
+          url: true,
+          width: true,
+          height: true,
+          sizeBytes: true,
+          mimeType: true,
+        },
+      },
     },
   });
 
@@ -76,6 +89,7 @@ export async function getFollowingFeed(
         liked: likedPostIds.has(post.id),
         saved: savedPostIds.has(post.id),
       },
+      images: post.images,
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
     })),
