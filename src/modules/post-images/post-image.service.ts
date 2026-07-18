@@ -19,14 +19,23 @@ export async function postImageMetaData(
   });
   if (!foundPost) throw new AppError(404, "Post not found");
 
+  const expectedPrefix = `uploads/users/${userId}/`;
+
+  if (!imgMetaData.objectKey.startsWith(expectedPrefix)) {
+    throw new AppError(403, "You cannot attach this image");
+  }
+
+  const publicUrl = `https://cdn.fake.local/${imgMetaData.objectKey}`;
+
   const result = await prisma.postImage.create({
     data: {
       postId: postId,
-      url: imgMetaData.url,
+      url: publicUrl,
       height: imgMetaData.height,
       width: imgMetaData.width,
       mimeType: imgMetaData.mimeType,
       sizeBytes: imgMetaData.sizeBytes,
+      objectKey: imgMetaData.objectKey,
     },
   });
 

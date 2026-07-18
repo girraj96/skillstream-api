@@ -88,7 +88,13 @@ export async function getSavedPosts(
     include: {
       post: {
         include: {
-          author: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              role: true,
+            },
+          },
           images: {
             orderBy: { createdAt: "asc" },
             select: {

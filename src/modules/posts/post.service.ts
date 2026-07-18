@@ -116,7 +116,13 @@ export async function getFeed(
       id: "desc",
     },
     include: {
-      author: true,
+      author: {
+        select: {
+          id: true,
+          name: true,
+          role: true,
+        },
+      },
       images: {
         orderBy: { createdAt: "asc" },
         select: {
@@ -183,7 +189,13 @@ export async function searchPosts(
       id: "desc",
     },
     include: {
-      author: true,
+      author: {
+        select: {
+          id: true,
+          name: true,
+          role: true,
+        },
+      },
       images: {
         orderBy: { createdAt: "asc" },
         select: {

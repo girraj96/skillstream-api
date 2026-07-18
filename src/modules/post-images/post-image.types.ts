@@ -1,5 +1,5 @@
 export interface PostImage {
-  url: string;
+  objectKey: string;
   width?: number;
   height?: number;
   sizeBytes?: number;
