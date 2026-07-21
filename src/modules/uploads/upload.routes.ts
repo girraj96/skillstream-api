@@ -1,7 +1,10 @@
 import { Router } from "express";
 
 import { authMiddleware } from "../../middlewares/auth.middleware";
-import { createImageUploadUrlHandler } from "./upload.controller";
+import {
+  completeUploadHandler,
+  createImageUploadUrlHandler,
+} from "./upload.controller";
 
 export const uploadRouter = Router();
 
@@ -10,3 +13,5 @@ uploadRouter.post(
   authMiddleware,
   createImageUploadUrlHandler,
 );
+
+uploadRouter.post("/uploads/complete", authMiddleware, completeUploadHandler);

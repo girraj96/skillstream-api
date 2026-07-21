@@ -18,6 +18,13 @@ enum Role {
   admin 
 } 
 
+enum UploadStatus {
+  pending
+  uploaded
+  attached
+  expired
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
@@ -35,6 +42,7 @@ model User {
   following UserFollow[] @relation("UserFollowers")
   notificationsReceived Notification[] @relation("NotificationUser")
   notificationsActed    Notification[] @relation("NotificationActor")
+  uploads Upload[]
   @@index([deletedAt, createdAt])
   @@index([role, deletedAt])
 
@@ -164,4 +172,21 @@ model PostImage {
   post      Post     @relation(fields: [postId], references: [id])
 
   @@index([postId, createdAt])
+}
+
+
+model Upload {
+  id        Int          @id @default(autoincrement())
+  userId    Int
+  objectKey String       @unique
+  mimeType  String
+  sizeBytes Int
+  status    UploadStatus @default(pending)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  expiresAt DateTime?
+
+  user      User         @relation(fields: [userId], references: [id])
+
+  @@index([userId, status, createdAt])
 }

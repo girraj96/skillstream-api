@@ -1,5 +1,10 @@
 import { prisma } from "../../db/prisma";
 import AppError from "../../errors/app-error";
+import {
+  assertImageObjectBelongsToUser,
+  buildPublicImageUrl,
+  deleteImageObject,
+} from "../storage/storage.service";
 import { PostImage } from "./post-image.types";
 
 export async function postImageMetaData(
@@ -9,6 +14,7 @@ export async function postImageMetaData(
 ) {
   const postId = Number(pId);
   const userId = Number(uId);
+  const objectKey: string = imgMetaData.objectKey;
 
   if (Number.isNaN(postId)) {
     throw new AppError(400, "Invalid post id");
@@ -19,24 +25,62 @@ export async function postImageMetaData(
   });
   if (!foundPost) throw new AppError(404, "Post not found");
 
-  const expectedPrefix = `uploads/users/${userId}/`;
+  assertImageObjectBelongsToUser(objectKey, userId);
 
-  if (!imgMetaData.objectKey.startsWith(expectedPrefix)) {
-    throw new AppError(403, "You cannot attach this image");
-  }
+  const result = await prisma.$transaction(async (tx) => {
+    const upload = await tx.upload.findFirst({
+      where: {
+        userId,
+        objectKey,
+      },
+    });
 
-  const publicUrl = `https://cdn.fake.local/${imgMetaData.objectKey}`;
+    if (!upload) {
+      throw new AppError(404, "Upload not found");
+    }
 
-  const result = await prisma.postImage.create({
-    data: {
-      postId: postId,
-      url: publicUrl,
-      height: imgMetaData.height,
-      width: imgMetaData.width,
-      mimeType: imgMetaData.mimeType,
-      sizeBytes: imgMetaData.sizeBytes,
-      objectKey: imgMetaData.objectKey,
-    },
+    if (upload.status === "expired") {
+      throw new AppError(410, "Upload expired");
+    }
+
+    if (
+      upload.status === "pending" &&
+      upload.expiresAt &&
+      upload.expiresAt < new Date()
+    ) {
+      await tx.upload.update({
+        where: { objectKey },
+        data: { status: "expired" },
+      });
+
+      throw new AppError(410, "Upload expired");
+    }
+
+    if (upload.status !== "uploaded") {
+      throw new AppError(409, "Upload is not completed");
+    }
+    const postImage = await tx.postImage.create({
+      data: {
+        postId,
+        url: buildPublicImageUrl(objectKey),
+        height: imgMetaData.height,
+        width: imgMetaData.width,
+        mimeType: imgMetaData.mimeType,
+        sizeBytes: imgMetaData.sizeBytes,
+        objectKey,
+      },
+    });
+
+    await tx.upload.update({
+      where: {
+        objectKey,
+      },
+      data: {
+        status: "attached",
+      },
+    });
+
+    return postImage;
   });
 
   return { data: result };
@@ -64,6 +108,9 @@ export async function deletePostImage(pId: string, imgId: string, uId: string) {
     throw new AppError(404, "Post image not found");
   }
 
+  if (postImgFound.objectKey) {
+    await deleteImageObject(postImgFound.objectKey);
+  }
   await prisma.postImage.delete({
     where: { id: imageId },
   });
