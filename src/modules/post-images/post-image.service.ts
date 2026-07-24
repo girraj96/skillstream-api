@@ -65,8 +65,6 @@ export async function postImageMetaData(
     const postImage = await tx.postImage.create({
       data: {
         postId,
-        url: buildPublicImageUrl(objectKey),
-
         mimeType: upload.mimeType,
         sizeBytes: upload.sizeBytes,
         objectKey,

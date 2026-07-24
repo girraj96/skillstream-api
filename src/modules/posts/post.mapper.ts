@@ -5,7 +5,7 @@ type FeedAuthor = Pick<User, "id" | "name" | "role">;
 
 type FeedImage = Pick<
   PostImage,
-  "id" | "url" | "objectKey" | "width" | "height" | "sizeBytes" | "mimeType"
+  "id" | "objectKey" | "width" | "height" | "sizeBytes" | "mimeType"
 >;
 
 type FeedPost = Post & {
@@ -27,7 +27,7 @@ export const toPostResponse = (post: Post) => {
 export const toPostImageResponse = (image: FeedImage) => {
   return {
     id: image.id,
-    url: image.objectKey ? buildPublicImageUrl(image.objectKey) : image.url,
+    url: buildPublicImageUrl(image.objectKey),
     width: image.width,
     height: image.height,
     sizeBytes: image.sizeBytes,

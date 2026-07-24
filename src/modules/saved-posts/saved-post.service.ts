@@ -99,10 +99,8 @@ export async function getSavedPosts(
             orderBy: { createdAt: "asc" },
             select: {
               id: true,
-              url: true,
               objectKey: true,
               width: true,
-
               height: true,
               sizeBytes: true,
               mimeType: true,

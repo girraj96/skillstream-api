@@ -127,7 +127,6 @@ export async function getFeed(
         orderBy: { createdAt: "asc" },
         select: {
           id: true,
-          url: true,
           objectKey: true,
           width: true,
           height: true,
@@ -201,7 +200,6 @@ export async function searchPosts(
         orderBy: { createdAt: "asc" },
         select: {
           id: true,
-          url: true,
           objectKey: true,
           width: true,
           height: true,

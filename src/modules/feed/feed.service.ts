@@ -53,7 +53,6 @@ export async function getFollowingFeed(
         },
         select: {
           id: true,
-          url: true,
           objectKey: true,
           width: true,
           height: true,

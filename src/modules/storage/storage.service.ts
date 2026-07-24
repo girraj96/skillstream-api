@@ -15,6 +15,10 @@ import { s3Client } from "./s3.client";
 type ImageUploadTarget = {
   uploadUrl: string;
   objectKey: string;
+  headers: {
+    "Content-Type": string;
+    "Cache-Control": string;
+  };
 };
 
 type DeleteImageObjectResult = {
@@ -39,6 +43,7 @@ export async function createImageUploadTarget(
   mimeType: string,
 ): Promise<ImageUploadTarget> {
   const safeFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, "-");
+  const cacheControl = "public, max-age=31536000, immutable";
 
   const id = crypto.randomUUID();
   const objectKey = `uploads/users/${userId}/${id}-${safeFileName}`;
@@ -47,13 +52,21 @@ export async function createImageUploadTarget(
     Bucket: storageConfig.s3Bucket,
     Key: objectKey,
     ContentType: mimeType,
+    CacheControl: cacheControl,
   });
 
   const uploadUrl = await getSignedUrl(s3Client, command, {
     expiresIn: storageConfig.uploadExpiresSeconds,
   });
 
-  return { uploadUrl, objectKey };
+  return {
+    uploadUrl,
+    objectKey,
+    headers: {
+      "Content-Type": mimeType,
+      "Cache-Control": cacheControl,
+    },
+  };
 }
 
 export function buildPublicImageUrl(objectKey: string): string {
