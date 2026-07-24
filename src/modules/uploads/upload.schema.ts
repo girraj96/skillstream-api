@@ -15,3 +15,9 @@ export const completeUploadSchema = z
     objectKey: z.string().min(1),
   })
   .strict();
+
+export const viewImageUrlSchema = z
+  .object({
+    objectKey: z.string().min(1),
+  })
+  .strict();

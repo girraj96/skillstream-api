@@ -21,9 +21,12 @@ export async function postImageMetaData(
   }
 
   const foundPost = await prisma.post.findFirst({
-    where: { id: postId, deletedAt: null, authorId: userId },
+    where: { id: postId, deletedAt: null },
   });
   if (!foundPost) throw new AppError(404, "Post not found");
+  if (foundPost.authorId !== userId) {
+    throw new AppError(403, "You cannot attach image to this post");
+  }
 
   assertImageObjectBelongsToUser(objectKey, userId);
 
@@ -63,10 +66,9 @@ export async function postImageMetaData(
       data: {
         postId,
         url: buildPublicImageUrl(objectKey),
-        height: imgMetaData.height,
-        width: imgMetaData.width,
-        mimeType: imgMetaData.mimeType,
-        sizeBytes: imgMetaData.sizeBytes,
+
+        mimeType: upload.mimeType,
+        sizeBytes: upload.sizeBytes,
         objectKey,
       },
     });

@@ -100,7 +100,9 @@ export async function getSavedPosts(
             select: {
               id: true,
               url: true,
+              objectKey: true,
               width: true,
+
               height: true,
               sizeBytes: true,
               mimeType: true,

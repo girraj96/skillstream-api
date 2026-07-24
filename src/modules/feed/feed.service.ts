@@ -3,6 +3,7 @@ import AppError from "../../errors/app-error";
 import { Prisma } from "../../generated/prisma/client";
 import { getPostStatsByPostIds } from "../../utils/helper";
 import { CursorPaginationMap } from "../../utils/types";
+import { toPostImageResponse } from "../posts/post.mapper";
 
 export async function getFollowingFeed(
   input: CursorPaginationMap,
@@ -53,6 +54,7 @@ export async function getFollowingFeed(
         select: {
           id: true,
           url: true,
+          objectKey: true,
           width: true,
           height: true,
           sizeBytes: true,
@@ -89,7 +91,7 @@ export async function getFollowingFeed(
         liked: likedPostIds.has(post.id),
         saved: savedPostIds.has(post.id),
       },
-      images: post.images,
+      images: post.images.map(toPostImageResponse),
       createdAt: post.createdAt,
       updatedAt: post.updatedAt,
     })),
