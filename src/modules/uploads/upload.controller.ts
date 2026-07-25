@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import AppError from "../../errors/app-error";
 import {
+  cleanupExpiredUploads,
   completeUpload,
   createImageUploadUrl,
   viewImageUrl,
@@ -57,6 +58,17 @@ export async function viewImageUrlHandler(req: Request, res: Response) {
   }
 
   const response = await viewImageUrl(String(req.user.id), result.data);
+
+  return res.status(200).json(response);
+}
+
+export async function cleanupExpiredUploadsHandler(
+  req: Request,
+  res: Response,
+) {
+  if (!req.user) throw new AppError(401, "Unauthorized");
+
+  const response = await cleanupExpiredUploads(String(req.user.id));
 
   return res.status(200).json(response);
 }

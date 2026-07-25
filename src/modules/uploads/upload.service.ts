@@ -3,11 +3,13 @@ import {
   assertImageObjectBelongsToUser,
   createImageUploadTarget,
   createImageViewUrl,
+  deleteImageObject,
   verifyImageObjectExists,
 } from "../storage/storage.service";
 import { prisma } from "../../db/prisma";
 import AppError from "../../errors/app-error";
 import { storageConfig } from "../../config/storage.config";
+import { expireOldPendingUploads } from "./upload-cleanup.service";
 
 export async function createImageUploadUrl(uId: string, input: ImageUploadUrl) {
   const userId = Number(uId);
@@ -154,5 +156,17 @@ export async function viewImageUrl(uId: string, input: CompleteUploadInput) {
 
   return {
     data: tempUrlInfo,
+  };
+}
+
+export async function cleanupExpiredUploads(uId: string) {
+  const userId = Number(uId);
+
+  if (Number.isNaN(userId)) {
+    throw new AppError(400, "Invalid user id");
+  }
+
+  return {
+    data: await expireOldPendingUploads(),
   };
 }
