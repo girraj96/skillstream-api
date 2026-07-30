@@ -32,9 +32,23 @@ type VerifiedImageObject = {
   sizeBytes?: number;
 };
 
+type VerifiedVideoObject = {
+  objectKey: string;
+  sizeBytes?: number;
+};
+
 type ImageViewTarget = {
   url: string;
   expiresAt: Date;
+};
+
+type VideoUploadTarget = {
+  uploadUrl: string;
+  objectKey: string;
+  headers: {
+    "Content-Type": string;
+    "Cache-Control": string;
+  };
 };
 
 export async function createImageUploadTarget(
@@ -149,4 +163,80 @@ export async function createImageViewUrl(
     url,
     expiresAt,
   };
+}
+
+export async function createVideoUploadTarget(
+  userId: number,
+  fileName: string,
+  mimeType: string,
+): Promise<VideoUploadTarget> {
+  const safeFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, "-");
+  const cacheControl = "public, max-age=31536000, immutable";
+
+  const id = crypto.randomUUID();
+  const objectKey = `videos/users/${userId}/${id}-${safeFileName}`;
+
+  const command = new PutObjectCommand({
+    Bucket: storageConfig.s3Bucket,
+    Key: objectKey,
+    ContentType: mimeType,
+    CacheControl: cacheControl,
+  });
+
+  const uploadUrl = await getSignedUrl(s3Client, command, {
+    expiresIn: storageConfig.uploadExpiresSeconds,
+  });
+
+  return {
+    uploadUrl,
+    objectKey,
+    headers: {
+      "Content-Type": mimeType,
+      "Cache-Control": cacheControl,
+    },
+  };
+}
+
+export function assertVideoObjectBelongsToUser(
+  objectKey: string,
+  userId: number,
+): void {
+  const expectedPrefix = `videos/users/${userId}/`;
+
+  if (!objectKey.startsWith(expectedPrefix)) {
+    throw new AppError(403, "You cannot attach this video");
+  }
+}
+
+export async function verifyStorageObjectExists(
+  objectKey: string,
+): Promise<VerifiedVideoObject> {
+  try {
+    const result = await s3Client.send(
+      new HeadObjectCommand({
+        Bucket: storageConfig.s3Bucket,
+        Key: objectKey,
+      }),
+    );
+
+    return {
+      objectKey,
+      sizeBytes: result.ContentLength,
+    };
+  } catch (error) {
+    if (
+      error instanceof S3ServiceException &&
+      error.$metadata.httpStatusCode === 404
+    ) {
+      throw new AppError(409, "File has not been uploaded yet");
+    }
+
+    throw error;
+  }
+}
+
+export function buildPublicVideoUrl(objectKey: string): string {
+  const publicUrl: string = `${storageConfig.publicCdnBaseUrl}/${objectKey}`;
+
+  return publicUrl;
 }

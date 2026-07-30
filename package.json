@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "docker:down": "docker stop skillstream_phpmyadmin",
     "backfill:post-counters": "tsx scripts/backfill-post-counters.ts",
-    "cleanup:expired-uploads": "tsx scripts/cleanup-expired-uploads.ts"
+    "cleanup:expired-uploads": "tsx scripts/cleanup-expired-uploads.ts",
+    "process:videos": "tsx scripts/process-videos.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1091.0",

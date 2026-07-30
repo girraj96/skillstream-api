@@ -25,6 +25,25 @@ enum UploadStatus {
   expired
 }
 
+enum VideoStatus {
+  pending
+  processing
+  ready
+  failed
+}
+
+enum VideoVisibility {
+  public
+  private
+}
+
+enum VideoQuality {
+  original
+  p720
+  p480
+  p360
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
@@ -43,6 +62,7 @@ model User {
   notificationsReceived Notification[] @relation("NotificationUser")
   notificationsActed    Notification[] @relation("NotificationActor")
   uploads Upload[]
+  videos    Video[]
   @@index([deletedAt, createdAt])
   @@index([role, deletedAt])
 
@@ -188,4 +208,43 @@ model Upload {
   user      User         @relation(fields: [userId], references: [id])
 
   @@index([userId, status, createdAt])
+}
+
+
+model Video {
+  id                 Int             @id @default(autoincrement())
+  authorId           Int
+  title              String
+  description        String          @db.Text
+  status             VideoStatus     @default(pending)
+  visibility         VideoVisibility @default(private)
+  originalObjectKey  String          @unique
+  thumbnailObjectKey String?         @unique
+  durationSeconds    Int?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  deletedAt          DateTime?
+
+  author             User            @relation(fields: [authorId], references: [id])
+  renditions         VideoRendition[]
+
+  @@index([authorId, deletedAt, createdAt])
+  @@index([visibility, status, deletedAt, createdAt])
+}
+
+model VideoRendition {
+  id        Int          @id @default(autoincrement())
+  videoId   Int
+  quality   VideoQuality
+  objectKey String       @unique
+  width     Int?
+  height    Int?
+  bitrate   Int?
+  sizeBytes Int?
+  createdAt DateTime     @default(now())
+
+  video     Video        @relation(fields: [videoId], references: [id])
+
+  @@unique([videoId, quality])
+  @@index([videoId])
 }

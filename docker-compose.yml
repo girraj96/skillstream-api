@@ -20,7 +20,7 @@ services:
     depends_on:
       - mysql
     ports:
-      - "8081:80"
+      - "8082:80"
     environment:
       PMA_HOST: mysql
       PMA_PORT: 3306
