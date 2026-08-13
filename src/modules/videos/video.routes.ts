@@ -5,10 +5,13 @@ import { authMiddleware } from "../../middlewares/auth.middleware";
 import {
   completeVideoUploadHandler,
   createVideoUploadHandler,
+  getTrendingVideosHandler,
   getVideoFeedHandler,
   getVideoHandler,
   publishVideoHandler,
+  searchVideosHandler,
   unPublishVideoHandler,
+  viewVideoHandler,
 } from "./video.controller";
 import { optionalAuthMiddleware } from "../../middlewares/optional-auth.middleware";
 
@@ -26,7 +29,8 @@ videoRouter.post(
   completeVideoUploadHandler,
 );
 videoRouter.get("/videos/feed", getVideoFeedHandler);
-
+videoRouter.get("/videos/search", searchVideosHandler);
+videoRouter.get("/videos/trending", getTrendingVideosHandler);
 videoRouter.get("/videos/:videoId", optionalAuthMiddleware, getVideoHandler);
 
 videoRouter.put(
@@ -39,3 +43,5 @@ videoRouter.put(
   authMiddleware,
   unPublishVideoHandler,
 );
+
+videoRouter.post("/videos/:videoId/view", authMiddleware, viewVideoHandler);

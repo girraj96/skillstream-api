@@ -16,6 +16,8 @@ import {
 import {
   CompleteUploadInput,
   CursorVideoFeedPagination,
+  CursorVideoSearchPaginationMap,
+  CursorVideoTrendingPagination,
   VideoUploadUrl,
 } from "./video.types";
 
@@ -220,5 +222,158 @@ export async function unPublishVideo(uId: string, vId: string) {
 
   return {
     data: toVideoResponse(updatedVideo),
+  };
+}
+
+export async function searchVideos(input: CursorVideoSearchPaginationMap) {
+  const where: Prisma.VideoWhereInput = {
+    deletedAt: null,
+    visibility: "public",
+    status: "ready",
+    OR: [
+      { title: { contains: input.q } },
+      { description: { contains: input.q } },
+      { author: { name: { contains: input.q } } },
+    ],
+  };
+
+  if (input.cursor) {
+    where.id = { lt: input.cursor };
+  }
+
+  const matchedVideos = await prisma.video.findMany({
+    where,
+    take: input.limit + 1,
+    select: videoResponseSelect,
+    orderBy: {
+      id: "desc",
+    },
+  });
+
+  const hasNextPage = matchedVideos.length > input.limit;
+
+  const pageVideos = matchedVideos.slice(0, input.limit);
+
+  const nextCursor = hasNextPage ? pageVideos[pageVideos.length - 1].id : null;
+
+  return {
+    data: pageVideos.map((video) => toVideoResponse(video)),
+    nextCursor,
+  };
+}
+
+export async function viewVideo(uId: string, vId: string) {
+  const videoId = parseVideoId(vId);
+
+  const userId = Number(uId);
+  if (Number.isNaN(userId)) {
+    throw new AppError(400, "Invalid user id");
+  }
+
+  const video = await findVideoForResponse(videoId);
+
+  if (!video || video.deletedAt) throw new AppError(404, "Video not found");
+
+  if (video.authorId !== userId && video.visibility === "private") {
+    throw new AppError(403, "You cannot view this video");
+  }
+
+  if (video.status !== "ready") {
+    throw new AppError(409, "Video is not ready to watch");
+  }
+
+  const viewedVideo = await prisma.videoView.findFirst({
+    where: {
+      videoId,
+      userId,
+    },
+  });
+
+  if (viewedVideo) {
+    return {
+      data: {
+        videoId,
+        viewed: true,
+        viewsCount: video.viewsCount,
+      },
+    };
+  }
+
+  const updatedVideo = await prisma.$transaction(async (tx) => {
+    await tx.videoView.create({
+      data: {
+        videoId,
+        userId,
+      },
+    });
+
+    return tx.video.update({
+      where: { id: videoId },
+      data: {
+        viewsCount: { increment: 1 },
+      },
+      select: {
+        viewsCount: true,
+      },
+    });
+  });
+
+  return {
+    data: {
+      videoId,
+      viewed: true,
+      viewsCount: updatedVideo.viewsCount,
+    },
+  };
+}
+
+export async function getTrendingVideos(input: CursorVideoTrendingPagination) {
+  const where: Prisma.VideoWhereInput = {
+    deletedAt: null,
+    status: "ready",
+    visibility: "public",
+  };
+
+  let cursorViewsCount: number | undefined;
+  let cursorId: number | undefined;
+
+  if (input.cursor) {
+    const [viewsCountRaw, idRaw] = input.cursor.split(":");
+
+    cursorViewsCount = Number(viewsCountRaw);
+    cursorId = Number(idRaw);
+
+    if (Number.isNaN(cursorViewsCount) || Number.isNaN(cursorId)) {
+      throw new AppError(400, "Invalid cursor");
+    }
+
+    where.OR = [
+      { viewsCount: { lt: cursorViewsCount } },
+      {
+        viewsCount: cursorViewsCount,
+        id: { lt: cursorId },
+      },
+    ];
+  }
+
+  const feedVideos = await prisma.video.findMany({
+    where,
+    take: input.limit + 1,
+    select: videoResponseSelect,
+    orderBy: [{ viewsCount: "desc" }, { id: "desc" }],
+  });
+
+  const hasNextPage = feedVideos.length > input.limit;
+
+  const pageVideos = feedVideos.slice(0, input.limit);
+  const lastVideo = pageVideos[pageVideos.length - 1];
+
+  const nextCursor = hasNextPage
+    ? `${lastVideo.viewsCount}:${lastVideo.id}`
+    : null;
+
+  return {
+    data: pageVideos.map((video) => toVideoResponse(video)),
+    nextCursor,
   };
 }

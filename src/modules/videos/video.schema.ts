@@ -30,3 +30,21 @@ export const cursorVideoFeedPaginationSchema = z
     cursor: z.coerce.number().int().positive().optional(),
   })
   .strict();
+
+export const cursorVideoSearchSchema = z
+  .object({
+    limit: z.coerce.number().int().min(1).max(50).default(10),
+    cursor: z.coerce.number().int().positive().optional(),
+    q: z.string().min(1).max(100),
+  })
+  .strict();
+
+export const cursorTrendingVideosPaginationSchema = z
+  .object({
+    limit: z.coerce.number().int().min(1).max(20).default(10),
+    cursor: z
+      .string()
+      .regex(/^\d+:\d+$/)
+      .optional(),
+  })
+  .strict();

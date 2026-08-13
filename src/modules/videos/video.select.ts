@@ -13,6 +13,7 @@ export const videoResponseSelect = {
   createdAt: true,
   deletedAt: true,
   authorId: true,
+  viewsCount: true,
   author: {
     select: {
       id: true,

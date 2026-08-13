@@ -63,6 +63,7 @@ model User {
   notificationsActed    Notification[] @relation("NotificationActor")
   uploads Upload[]
   videos    Video[]
+  videoViews VideoView[]
   @@index([deletedAt, createdAt])
   @@index([role, deletedAt])
 
@@ -227,9 +228,12 @@ model Video {
 
   author             User            @relation(fields: [authorId], references: [id])
   renditions         VideoRendition[]
-
+  viewsCount Int @default(0)
+  views      VideoView[]
   @@index([authorId, deletedAt, createdAt])
   @@index([visibility, status, deletedAt, createdAt])
+  @@index([visibility, status, deletedAt, id])
+  @@index([visibility, status, deletedAt, viewsCount, id])
 }
 
 model VideoRendition {
@@ -247,4 +251,19 @@ model VideoRendition {
 
   @@unique([videoId, quality])
   @@index([videoId])
+}
+
+
+model VideoView {
+  id        Int      @id @default(autoincrement())
+  videoId   Int
+  userId    Int
+  createdAt DateTime @default(now())
+
+  video     Video    @relation(fields: [videoId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([videoId, userId])
+  @@index([videoId, createdAt])
+  @@index([userId, createdAt])
 }

@@ -23,6 +23,7 @@ export function toVideoResponse(video: VideoForResponse) {
     thumbnailUrl: video.thumbnailObjectKey
       ? buildPublicVideoUrl(video.thumbnailObjectKey)
       : null,
+    viewsCount: video.viewsCount,
     author: {
       id: video.author.id,
       name: video.author.name,
