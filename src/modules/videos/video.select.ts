@@ -14,6 +14,7 @@ export const videoResponseSelect = {
   deletedAt: true,
   authorId: true,
   viewsCount: true,
+  likesCount: true,
   author: {
     select: {
       id: true,
@@ -50,6 +51,15 @@ export async function findVideoForResponse(
 ): Promise<VideoForResponse | null> {
   return prisma.video.findUnique({
     where: { id: videoId },
+    select: videoResponseSelect,
+  });
+}
+
+export async function findReadyVideoForResponse(
+  videoId: number,
+): Promise<VideoForResponse | null> {
+  return prisma.video.findUnique({
+    where: { id: videoId, status: "ready" },
     select: videoResponseSelect,
   });
 }

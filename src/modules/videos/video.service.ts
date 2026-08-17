@@ -9,6 +9,7 @@ import {
 } from "../storage/storage.service";
 import { toVideoResponse } from "./video.mapper";
 import {
+  findReadyVideoForResponse,
   findVideoForResponse,
   parseVideoId,
   videoResponseSelect,
@@ -133,7 +134,10 @@ export async function getVideo(viewerUserId: number | undefined, vId: string) {
   };
 }
 
-export async function getVideoFeed(input: CursorVideoFeedPagination) {
+export async function getVideoFeed(
+  input: CursorVideoFeedPagination,
+  viewerUserId: number | undefined,
+) {
   const where: Prisma.VideoWhereInput = {
     deletedAt: null,
     status: "ready",
@@ -225,7 +229,10 @@ export async function unPublishVideo(uId: string, vId: string) {
   };
 }
 
-export async function searchVideos(input: CursorVideoSearchPaginationMap) {
+export async function searchVideos(
+  input: CursorVideoSearchPaginationMap,
+  viewerUserId: number | undefined,
+) {
   const where: Prisma.VideoWhereInput = {
     deletedAt: null,
     visibility: "public",
@@ -327,7 +334,10 @@ export async function viewVideo(uId: string, vId: string) {
   };
 }
 
-export async function getTrendingVideos(input: CursorVideoTrendingPagination) {
+export async function getTrendingVideos(
+  input: CursorVideoTrendingPagination,
+  viewerUserId: number | undefined,
+) {
   const where: Prisma.VideoWhereInput = {
     deletedAt: null,
     status: "ready",
@@ -374,6 +384,138 @@ export async function getTrendingVideos(input: CursorVideoTrendingPagination) {
 
   return {
     data: pageVideos.map((video) => toVideoResponse(video)),
-    nextCursor,
+    page: {
+      limit: input.limit,
+      nextCursor,
+      hasNextPage,
+    },
+  };
+}
+
+export async function likeVideo(uId: string, vId: string) {
+  const videoId = parseVideoId(vId);
+
+  const userId = Number(uId);
+  if (Number.isNaN(userId)) {
+    throw new AppError(400, "Invalid user id");
+  }
+
+  const video = await findReadyVideoForResponse(videoId);
+
+  if (!video || video.deletedAt) throw new AppError(404, "Video not found");
+
+  if (video.visibility === "private" && video.authorId !== userId) {
+    throw new AppError(403, "Video not found");
+  }
+
+  const likeFound = await prisma.videoLike.findFirst({
+    where: {
+      videoId,
+      userId,
+    },
+  });
+
+  if (likeFound) {
+    return {
+      data: {
+        videoId,
+        liked: true,
+        likesCount: video.likesCount,
+      },
+    };
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    await tx.videoLike.create({
+      data: {
+        userId,
+        videoId,
+      },
+    });
+
+    const updatedVideo = await tx.video.update({
+      where: { id: videoId },
+      data: {
+        likesCount: { increment: 1 },
+      },
+      select: {
+        likesCount: true,
+      },
+    });
+
+    return updatedVideo;
+  });
+
+  return {
+    data: {
+      videoId,
+      liked: true,
+      likesCount: result.likesCount,
+    },
+  };
+}
+
+export async function deleteVideoLike(uId: string, vId: string) {
+  const videoId = parseVideoId(vId);
+
+  const userId = Number(uId);
+  if (Number.isNaN(userId)) {
+    throw new AppError(400, "Invalid user id");
+  }
+
+  const foundVideo = await findReadyVideoForResponse(videoId);
+
+  if (!foundVideo || foundVideo.deletedAt)
+    throw new AppError(404, "Video not found");
+
+  if (foundVideo.visibility === "private" && foundVideo.authorId !== userId) {
+    throw new AppError(403, "Video not found");
+  }
+
+  const likeFound = await prisma.videoLike.findFirst({
+    where: {
+      videoId,
+      userId,
+    },
+  });
+
+  if (!likeFound) {
+    return {
+      data: {
+        videoId,
+        liked: false,
+        likesCount: foundVideo.likesCount,
+      },
+    };
+  }
+
+  const updatedVideo = await prisma.$transaction(async (tx) => {
+    await tx.videoLike.delete({
+      where: {
+        id: likeFound.id,
+      },
+    });
+
+    await tx.video.updateMany({
+      where: { id: videoId, likesCount: { gt: 0 } },
+      data: {
+        likesCount: { decrement: 1 },
+      },
+    });
+
+    return tx.video.findUniqueOrThrow({
+      where: { id: videoId },
+      select: {
+        likesCount: true,
+      },
+    });
+  });
+
+  return {
+    data: {
+      videoId,
+      liked: false,
+      likesCount: updatedVideo.likesCount,
+    },
   };
 }

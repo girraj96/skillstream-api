@@ -4,9 +4,11 @@ import z from "zod";
 import {
   completeVideoUpload,
   createVideoUploadUrl,
+  deleteVideoLike,
   getTrendingVideos,
   getVideo,
   getVideoFeed,
+  likeVideo,
   publishVideo,
   searchVideos,
   unPublishVideo,
@@ -74,7 +76,7 @@ export async function getVideoFeedHandler(req: Request, res: Response) {
     });
   }
 
-  const response = await getVideoFeed(result.data);
+  const response = await getVideoFeed(result.data, req.user?.id);
   return res.status(200).json(response);
 }
 
@@ -110,7 +112,7 @@ export async function searchVideosHandler(req: Request, res: Response) {
     });
   }
 
-  const response = await searchVideos(result.data);
+  const response = await searchVideos(result.data, req.user?.id);
   return res.status(200).json(response);
 }
 
@@ -132,6 +134,27 @@ export async function getTrendingVideosHandler(req: Request, res: Response) {
     });
   }
 
-  const response = await getTrendingVideos(result.data);
+  const response = await getTrendingVideos(result.data, req.user?.id);
+  return res.status(200).json(response);
+}
+
+export async function likeVideoHandler(
+  req: Request<{ videoId: string }>,
+  res: Response,
+) {
+  if (!req.user) throw new AppError(401, "Unauthorized");
+  const response = await likeVideo(String(req.user.id), req.params.videoId);
+  return res.status(200).json(response);
+}
+
+export async function deleteVideoLikeHandler(
+  req: Request<{ videoId: string }>,
+  res: Response,
+) {
+  if (!req.user) throw new AppError(401, "Unauthorized");
+  const response = await deleteVideoLike(
+    String(req.user.id),
+    req.params.videoId,
+  );
   return res.status(200).json(response);
 }

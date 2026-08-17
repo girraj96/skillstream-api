@@ -24,6 +24,7 @@ export function toVideoResponse(video: VideoForResponse) {
       ? buildPublicVideoUrl(video.thumbnailObjectKey)
       : null,
     viewsCount: video.viewsCount,
+    likesCount: video.likesCount,
     author: {
       id: video.author.id,
       name: video.author.name,

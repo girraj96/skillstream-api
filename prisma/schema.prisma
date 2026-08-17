@@ -64,6 +64,7 @@ model User {
   uploads Upload[]
   videos    Video[]
   videoViews VideoView[]
+  videoLikes VideoLike[]
   @@index([deletedAt, createdAt])
   @@index([role, deletedAt])
 
@@ -230,6 +231,8 @@ model Video {
   renditions         VideoRendition[]
   viewsCount Int @default(0)
   views      VideoView[]
+  likesCount Int @default(0)
+  likes      VideoLike[]
   @@index([authorId, deletedAt, createdAt])
   @@index([visibility, status, deletedAt, createdAt])
   @@index([visibility, status, deletedAt, id])
@@ -255,6 +258,21 @@ model VideoRendition {
 
 
 model VideoView {
+  id        Int      @id @default(autoincrement())
+  videoId   Int
+  userId    Int
+  createdAt DateTime @default(now())
+
+  video     Video    @relation(fields: [videoId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([videoId, userId])
+  @@index([videoId, createdAt])
+  @@index([userId, createdAt])
+}
+
+
+model VideoLike {
   id        Int      @id @default(autoincrement())
   videoId   Int
   userId    Int
