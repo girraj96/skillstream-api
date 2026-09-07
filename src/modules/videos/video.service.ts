@@ -2,6 +2,7 @@ import { storageConfig } from "../../config/storage.config";
 import { prisma } from "../../db/prisma";
 import AppError from "../../errors/app-error";
 import { Prisma } from "../../generated/prisma/client";
+import { getVideoViewerStateByVideoIds } from "../../utils/helper";
 import {
   assertVideoObjectBelongsToUser,
   createVideoUploadTarget,
@@ -129,8 +130,16 @@ export async function getVideo(viewerUserId: number | undefined, vId: string) {
     throw new AppError(403, "You're not authorized to see this video");
   }
 
+  const { likedVideoIds, viewedVideoIds } = await getVideoViewerStateByVideoIds(
+    [video.id],
+    viewerUserId,
+  );
+
   return {
-    data: toVideoResponse(video),
+    data: toVideoResponse(video, {
+      liked: likedVideoIds.has(video.id),
+      viewed: viewedVideoIds.has(video.id),
+    }),
   };
 }
 
@@ -164,9 +173,19 @@ export async function getVideoFeed(
   const pageVideos = feedVideos.slice(0, input.limit);
 
   const nextCursor = hasNextPage ? pageVideos[pageVideos.length - 1].id : null;
+  const videoIds = pageVideos.map((video) => video.id);
+  const { likedVideoIds, viewedVideoIds } = await getVideoViewerStateByVideoIds(
+    videoIds,
+    viewerUserId,
+  );
 
   return {
-    data: pageVideos.map((video) => toVideoResponse(video)),
+    data: pageVideos.map((video) =>
+      toVideoResponse(video, {
+        liked: likedVideoIds.has(video.id),
+        viewed: viewedVideoIds.has(video.id),
+      }),
+    ),
     nextCursor,
   };
 }
@@ -197,8 +216,16 @@ export async function publishVideo(uId: string, vId: string) {
     select: videoResponseSelect,
   });
 
+  const { likedVideoIds, viewedVideoIds } = await getVideoViewerStateByVideoIds(
+    [updatedVideo.id],
+    userId,
+  );
+
   return {
-    data: toVideoResponse(updatedVideo),
+    data: toVideoResponse(updatedVideo, {
+      liked: likedVideoIds.has(updatedVideo.id),
+      viewed: viewedVideoIds.has(updatedVideo.id),
+    }),
   };
 }
 
@@ -224,8 +251,16 @@ export async function unPublishVideo(uId: string, vId: string) {
     select: videoResponseSelect,
   });
 
+  const { likedVideoIds, viewedVideoIds } = await getVideoViewerStateByVideoIds(
+    [updatedVideo.id],
+    userId,
+  );
+
   return {
-    data: toVideoResponse(updatedVideo),
+    data: toVideoResponse(updatedVideo, {
+      liked: likedVideoIds.has(updatedVideo.id),
+      viewed: viewedVideoIds.has(updatedVideo.id),
+    }),
   };
 }
 
@@ -262,9 +297,20 @@ export async function searchVideos(
   const pageVideos = matchedVideos.slice(0, input.limit);
 
   const nextCursor = hasNextPage ? pageVideos[pageVideos.length - 1].id : null;
+  const videoIds = pageVideos.map((video) => video.id);
+
+  const { likedVideoIds, viewedVideoIds } = await getVideoViewerStateByVideoIds(
+    videoIds,
+    viewerUserId,
+  );
 
   return {
-    data: pageVideos.map((video) => toVideoResponse(video)),
+    data: pageVideos.map((video) =>
+      toVideoResponse(video, {
+        liked: likedVideoIds.has(video.id),
+        viewed: viewedVideoIds.has(video.id),
+      }),
+    ),
     nextCursor,
   };
 }
@@ -382,8 +428,19 @@ export async function getTrendingVideos(
     ? `${lastVideo.viewsCount}:${lastVideo.id}`
     : null;
 
+  const videoIds = pageVideos.map((video) => video.id);
+  const { likedVideoIds, viewedVideoIds } = await getVideoViewerStateByVideoIds(
+    videoIds,
+    viewerUserId,
+  );
+
   return {
-    data: pageVideos.map((video) => toVideoResponse(video)),
+    data: pageVideos.map((video) =>
+      toVideoResponse(video, {
+        liked: likedVideoIds.has(video.id),
+        viewed: viewedVideoIds.has(video.id),
+      }),
+    ),
     page: {
       limit: input.limit,
       nextCursor,

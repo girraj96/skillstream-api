@@ -1,7 +1,10 @@
 import { buildPublicVideoUrl } from "../storage/storage.service";
 import type { VideoForResponse } from "./video.select";
 
-export function toVideoResponse(video: VideoForResponse) {
+export function toVideoResponse(
+  video: VideoForResponse,
+  viewer: { liked: boolean; viewed: boolean },
+) {
   const originalRendition = video.renditions.find(
     (rendition) => rendition.quality === "original",
   );
@@ -30,6 +33,7 @@ export function toVideoResponse(video: VideoForResponse) {
       name: video.author.name,
     },
     playback,
+    viewer,
     createdAt: video.createdAt,
   };
 }

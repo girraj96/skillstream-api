@@ -55,3 +55,35 @@ export async function getPostByAuthorIds(authorIds: number[]) {
     posts,
   };
 }
+
+export async function getVideoViewerStateByVideoIds(
+  videoIds: number[],
+  userId?: number,
+) {
+  if (videoIds.length === 0) {
+    return {
+      likedVideoIds: new Set<number>(),
+      viewedVideoIds: new Set<number>(),
+    };
+  }
+
+  const likedVideos = userId
+    ? await prisma.videoLike.findMany({
+        where: { userId, videoId: { in: videoIds } },
+      })
+    : [];
+
+  const viewedVideo = userId
+    ? await prisma.videoView.findMany({
+        where: { userId, videoId: { in: videoIds } },
+      })
+    : [];
+
+  const likedVideoIds = new Set(likedVideos.map((like) => like.videoId));
+  const viewedVideoIds = new Set(viewedVideo.map((view) => view.videoId));
+
+  return {
+    likedVideoIds,
+    viewedVideoIds,
+  };
+}
