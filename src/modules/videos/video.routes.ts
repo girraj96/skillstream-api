@@ -4,9 +4,12 @@ import { authMiddleware } from "../../middlewares/auth.middleware";
 
 import {
   completeVideoUploadHandler,
+  createVideoCommentHandler,
   createVideoUploadHandler,
+  deleteVideoCommentHandler,
   deleteVideoLikeHandler,
   getTrendingVideosHandler,
+  getVideoCommentsHandler,
   getVideoFeedHandler,
   getVideoHandler,
   likeVideoHandler,
@@ -56,4 +59,20 @@ videoRouter.delete(
   "/videos/:videoId/like",
   authMiddleware,
   deleteVideoLikeHandler,
+);
+
+videoRouter.post(
+  "/videos/:videoId/comments",
+  authMiddleware,
+  createVideoCommentHandler,
+);
+videoRouter.get(
+  "/videos/:videoId/comments",
+  optionalAuthMiddleware,
+  getVideoCommentsHandler,
+);
+videoRouter.delete(
+  "/videos/:videoId/comments/:commentId",
+  authMiddleware,
+  deleteVideoCommentHandler,
 );

@@ -1,8 +1,10 @@
 import { z } from "zod";
 import {
   completeUploadSchema,
+  createVideoCommentSchema,
   createVideoUploadUrlSchema,
   cursorTrendingVideosPaginationSchema,
+  cursorVideoCommentPaginationSchema,
   cursorVideoFeedPaginationSchema,
   cursorVideoSearchSchema,
 } from "./video.schema";
@@ -21,4 +23,10 @@ export type CursorVideoSearchPaginationMap = z.infer<
 
 export type CursorVideoTrendingPagination = z.infer<
   typeof cursorTrendingVideosPaginationSchema
+>;
+
+export type CreateVideoComment = z.infer<typeof createVideoCommentSchema>;
+
+export type CursorVideoCommentPagination = z.infer<
+  typeof cursorVideoCommentPaginationSchema
 >;

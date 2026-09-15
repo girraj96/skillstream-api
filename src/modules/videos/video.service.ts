@@ -2,21 +2,25 @@ import { storageConfig } from "../../config/storage.config";
 import { prisma } from "../../db/prisma";
 import AppError from "../../errors/app-error";
 import { Prisma } from "../../generated/prisma/client";
+import { VideoCommentWhereInput } from "../../generated/prisma/models";
 import { getVideoViewerStateByVideoIds } from "../../utils/helper";
 import {
   assertVideoObjectBelongsToUser,
   createVideoUploadTarget,
   verifyStorageObjectExists,
 } from "../storage/storage.service";
-import { toVideoResponse } from "./video.mapper";
+import { toVideoCommentResponse, toVideoResponse } from "./video.mapper";
 import {
   findReadyVideoForResponse,
   findVideoForResponse,
+  parseCommentId,
   parseVideoId,
   videoResponseSelect,
 } from "./video.select";
 import {
   CompleteUploadInput,
+  CreateVideoComment,
+  CursorVideoCommentPagination,
   CursorVideoFeedPagination,
   CursorVideoSearchPaginationMap,
   CursorVideoTrendingPagination,
@@ -575,4 +579,184 @@ export async function deleteVideoLike(uId: string, vId: string) {
       likesCount: updatedVideo.likesCount,
     },
   };
+}
+
+export async function createVideoComment(
+  uId: string,
+  vId: string,
+  input: CreateVideoComment,
+) {
+  const videoId = parseVideoId(vId);
+
+  const userId = Number(uId);
+  if (Number.isNaN(userId)) {
+    throw new AppError(400, "Invalid user id");
+  }
+
+  const foundVideo = await findReadyVideoForResponse(videoId);
+
+  if (!foundVideo || foundVideo.deletedAt)
+    throw new AppError(404, "Video not found");
+
+  if (foundVideo.visibility === "private" && foundVideo.authorId !== userId) {
+    throw new AppError(403, "Video not found");
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    const comment = await tx.videoComment.create({
+      data: {
+        content: input.content,
+        videoId,
+        userId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    await tx.video.update({
+      where: { id: videoId },
+      data: {
+        commentsCount: { increment: 1 },
+      },
+    });
+
+    if (foundVideo.authorId !== userId) {
+      await tx.notification.create({
+        data: {
+          userId: foundVideo.authorId,
+          actorId: userId,
+          videoId,
+          commentId: comment.id,
+          type: "comment",
+        },
+      });
+    }
+
+    return comment;
+  });
+
+  return toVideoCommentResponse(result);
+}
+
+export async function getVideoComments(
+  uId: number | undefined,
+  vId: string,
+  input: CursorVideoCommentPagination,
+) {
+  const videoId = parseVideoId(vId);
+
+  const userId = uId ? Number(uId) : undefined;
+
+  if (uId && Number.isNaN(userId)) {
+    throw new AppError(400, "Invalid user id");
+  }
+
+  const foundVideo = await findReadyVideoForResponse(videoId);
+
+  if (!foundVideo || foundVideo.deletedAt)
+    throw new AppError(404, "Video not found");
+
+  if (foundVideo.visibility === "private" && foundVideo.authorId !== userId) {
+    throw new AppError(403, "Video not found");
+  }
+
+  const where: VideoCommentWhereInput = {
+    deletedAt: null,
+    videoId,
+  };
+
+  if (input.cursor) {
+    where.id = {
+      lt: input.cursor,
+    };
+  }
+
+  const comments = await prisma.videoComment.findMany({
+    where,
+    take: input.limit + 1,
+    orderBy: {
+      id: "desc",
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  const hasNextPage = comments.length > input.limit;
+
+  const pageComments = hasNextPage ? comments.slice(0, input.limit) : comments;
+  const nextCursor = hasNextPage
+    ? pageComments[pageComments.length - 1].id
+    : null;
+
+  return {
+    data: pageComments.map(toVideoCommentResponse),
+    meta: {
+      ...input,
+      nextCursor: nextCursor,
+    },
+  };
+}
+
+export async function deleteVideoComment(
+  uId: string,
+  vId: string,
+  cId: string,
+) {
+  const videoId = parseVideoId(vId);
+  const commentId = parseCommentId(cId);
+
+  const userId = Number(uId);
+  if (Number.isNaN(userId)) {
+    throw new AppError(400, "Invalid user id");
+  }
+
+  const foundVideo = await findReadyVideoForResponse(videoId);
+
+  if (!foundVideo || foundVideo.deletedAt)
+    throw new AppError(404, "Video not found");
+
+  if (foundVideo.visibility === "private" && foundVideo.authorId !== userId) {
+    throw new AppError(403, "Video not found");
+  }
+
+  const commentFound = await prisma.videoComment.findFirst({
+    where: {
+      id: commentId,
+      userId,
+      videoId,
+    },
+  });
+
+  if (commentFound) {
+    await prisma.$transaction(async (tx) => {
+      await tx.videoComment.update({
+        where: {
+          id: commentFound.id,
+        },
+        data: {
+          deletedAt: new Date(),
+        },
+      });
+
+      await tx.video.updateMany({
+        where: { id: videoId, commentsCount: { gt: 0 } },
+        data: {
+          commentsCount: { decrement: 1 },
+        },
+      });
+    });
+  }
+  return { data: "Success" };
 }

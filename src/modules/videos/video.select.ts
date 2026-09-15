@@ -15,6 +15,7 @@ export const videoResponseSelect = {
   authorId: true,
   viewsCount: true,
   likesCount: true,
+  commentsCount: true,
   author: {
     select: {
       id: true,
@@ -44,6 +45,16 @@ export function parseVideoId(videoIdRaw: string): number {
   }
 
   return videoId;
+}
+
+export function parseCommentId(commentIdRaw: string): number {
+  const commentId = Number(commentIdRaw);
+
+  if (Number.isNaN(commentId)) {
+    throw new AppError(400, "Invalid comment id");
+  }
+
+  return commentId;
 }
 
 export async function findVideoForResponse(

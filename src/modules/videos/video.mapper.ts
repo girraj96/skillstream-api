@@ -1,5 +1,13 @@
+import { User, VideoComment } from "../../generated/prisma/client";
 import { buildPublicVideoUrl } from "../storage/storage.service";
 import type { VideoForResponse } from "./video.select";
+
+type VideoCommentForResponse = VideoComment & {
+  user: {
+    id: number;
+    name: string | null;
+  };
+};
 
 export function toVideoResponse(
   video: VideoForResponse,
@@ -28,6 +36,8 @@ export function toVideoResponse(
       : null,
     viewsCount: video.viewsCount,
     likesCount: video.likesCount,
+    commentsCount: video.commentsCount,
+
     author: {
       id: video.author.id,
       name: video.author.name,
@@ -37,3 +47,18 @@ export function toVideoResponse(
     createdAt: video.createdAt,
   };
 }
+
+export const toVideoCommentResponse = (comment: VideoCommentForResponse) => {
+  return {
+    id: comment.id,
+    content: comment.content,
+    authorId: comment.userId,
+    videoId: comment.videoId,
+    author: {
+      id: comment.user.id,
+      name: comment.user.name,
+    },
+    createdAt: comment.createdAt,
+    updatedAt: comment.updatedAt,
+  };
+};

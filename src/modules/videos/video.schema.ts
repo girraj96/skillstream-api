@@ -48,3 +48,16 @@ export const cursorTrendingVideosPaginationSchema = z
       .optional(),
   })
   .strict();
+
+export const createVideoCommentSchema = z
+  .object({
+    content: z.string().min(10).max(1000),
+  })
+  .strict();
+
+export const cursorVideoCommentPaginationSchema = z
+  .object({
+    limit: z.coerce.number().int().min(1).max(20).default(10),
+    cursor: z.coerce.number().int().positive().optional(),
+  })
+  .strict();

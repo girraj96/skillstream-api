@@ -65,6 +65,7 @@ model User {
   videos    Video[]
   videoViews VideoView[]
   videoLikes VideoLike[]
+  videoComments VideoComment[]
   @@index([deletedAt, createdAt])
   @@index([role, deletedAt])
 
@@ -162,6 +163,7 @@ model UserFollow {
 
 enum NotificationType {
   follow
+  comment
 }
 
 model Notification {
@@ -171,11 +173,14 @@ model Notification {
   type      NotificationType
   readAt    DateTime?
   createdAt DateTime         @default(now())
-
+  videoId   Int?
+  commentId Int?
   user      User             @relation("NotificationUser", fields: [userId], references: [id])
   actor     User             @relation("NotificationActor", fields: [actorId], references: [id])
 
   @@index([userId, readAt, createdAt])
+  @@index([videoId, createdAt])
+  @@index([commentId])
 }
 
 
@@ -233,6 +238,8 @@ model Video {
   views      VideoView[]
   likesCount Int @default(0)
   likes      VideoLike[]
+  commentsCount Int @default(0)
+  comments      VideoComment[]
   @@index([authorId, deletedAt, createdAt])
   @@index([visibility, status, deletedAt, createdAt])
   @@index([visibility, status, deletedAt, id])
@@ -284,4 +291,21 @@ model VideoLike {
   @@unique([videoId, userId])
   @@index([videoId, createdAt])
   @@index([userId, createdAt])
+}
+
+
+model VideoComment {
+  id        Int      @id @default(autoincrement())
+  videoId   Int
+  userId    Int
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  video     Video    @relation(fields: [videoId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([videoId, deletedAt, id])
+  @@index([userId, deletedAt, createdAt])
 }
