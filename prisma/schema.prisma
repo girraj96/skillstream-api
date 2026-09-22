@@ -44,6 +44,12 @@ enum VideoQuality {
   p360
 }
 
+enum ChatType {
+  direct
+  group
+}
+
+
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
@@ -66,6 +72,8 @@ model User {
   videoViews VideoView[]
   videoLikes VideoLike[]
   videoComments VideoComment[]
+  chatMemberships  ConversationMember[]
+  sentChatMessages ChatMessage[]
   @@index([deletedAt, createdAt])
   @@index([role, deletedAt])
 
@@ -308,4 +316,44 @@ model VideoComment {
 
   @@index([videoId, deletedAt, id])
   @@index([userId, deletedAt, createdAt])
+}
+
+
+model Conversation {
+  id        Int      @id @default(autoincrement())
+  type      ChatType
+  name      String?
+  directKey String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members   ConversationMember[]
+  messages  ChatMessage[]
+}
+
+
+model ConversationMember {
+  conversationId Int
+  userId         Int
+  joinedAt       DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@id([conversationId, userId])
+  @@index([userId, conversationId])
+}
+
+
+model ChatMessage {
+  id             Int      @id @default(autoincrement())
+  conversationId Int
+  senderId       Int
+  body           String   @db.Text
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  sender       User         @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId, id])
 }

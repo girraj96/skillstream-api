@@ -2,12 +2,15 @@ import { prisma } from "../../db/prisma";
 import AppError from "../../errors/app-error";
 import { Prisma } from "../../generated/prisma/client";
 import { CursorPaginationMap } from "../../utils/types";
+import { toNotificationResponse } from "./notification.mapper";
 
 const notificationSelect = {
   id: true,
   type: true,
   readAt: true,
   createdAt: true,
+  videoId: true,
+  commentId: true,
   actor: {
     select: {
       id: true,
@@ -49,7 +52,7 @@ export async function getNotifications(
     ? pageNotifications[pageNotifications.length - 1].id
     : null;
   return {
-    data: pageNotifications,
+    data: pageNotifications.map(toNotificationResponse),
     meta: {
       ...input,
       nextCursor: nextCursor,
@@ -83,7 +86,7 @@ export async function readNotification(nId: string, uId: string) {
   });
 
   return {
-    data: notification,
+    data: toNotificationResponse(notification),
   };
 }
 
