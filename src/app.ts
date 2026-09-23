@@ -15,6 +15,7 @@ import { feedRouter } from "./modules/feed/feed.routes";
 import { postImageRouter } from "./modules/post-images/post-image.routes";
 import { uploadRouter } from "./modules/uploads/upload.routes";
 import { videoRouter } from "./modules/videos/video.routes";
+import { conversationRouter } from "./modules/conversations/conversation.routes";
 
 export function createApp() {
   const app = express();
@@ -41,6 +42,7 @@ export function createApp() {
   app.use(postImageRouter);
   app.use(uploadRouter);
   app.use(videoRouter);
+  app.use(conversationRouter);
   app.use(errorHandler);
 
   return app;
