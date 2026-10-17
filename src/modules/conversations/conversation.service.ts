@@ -1,7 +1,10 @@
 import { prisma } from "../../db/prisma";
 import AppError from "../../errors/app-error";
 import { Prisma } from "../../generated/prisma/client";
-import { ConversationInput } from "./conversation.types";
+import {
+  ConversationInput,
+  ConversationMessageInput,
+} from "./conversation.types";
 
 const conversationSelect = {
   id: true,
@@ -63,4 +66,58 @@ export async function createDirectConversation(
     }
     throw error;
   }
+}
+
+export async function sendConversationMessage(
+  input: ConversationMessageInput,
+  cId: string,
+  uID: string,
+) {
+  const conversationId = Number(cId);
+
+  const userId = Number(uID);
+
+  if (!Number.isInteger(conversationId) || conversationId <= 0) {
+    throw new AppError(400, "Invalid conversation id");
+  }
+
+  if (!Number.isInteger(userId) || userId <= 0) {
+    throw new AppError(401, "Unauthorized");
+  }
+
+  const foundConversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: { id: true },
+  });
+
+  if (!foundConversation) throw new AppError(404, "Conversation not found");
+
+  const membership = await prisma.conversationMember.findUnique({
+    where: {
+      conversationId_userId: {
+        conversationId,
+        userId,
+      },
+    },
+  });
+
+  if (!membership) {
+    throw new AppError(403, "You are not a member of this conversation");
+  }
+
+  const message = await prisma.chatMessage.create({
+    data: {
+      conversationId,
+      senderId: userId,
+      body: input.content,
+    },
+  });
+
+  return {
+    id: message.id,
+    conversationId: message.conversationId,
+    senderId: message.senderId,
+    content: message.body,
+    createdAt: message.createdAt,
+  };
 }
