@@ -9,3 +9,7 @@ export type ConversationInput = z.infer<typeof conversationSchema>;
 export type ConversationMessageInput = z.infer<
   typeof conversationMessageSchema
 >;
+
+export type ConversationMessagesPaginationInput = z.infer<
+  typeof cursorConversationPaginationSchema
+>;

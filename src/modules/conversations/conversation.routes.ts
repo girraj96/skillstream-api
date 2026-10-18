@@ -4,6 +4,7 @@ import { authMiddleware } from "../../middlewares/auth.middleware";
 
 import {
   createDirectConversationHandler,
+  getConversationMessagesHandler,
   sendConversationMessageHandler,
 } from "./conversation.controller";
 
@@ -19,4 +20,10 @@ conversationRouter.post(
   "/conversations/:conversationId/messages",
   authMiddleware,
   sendConversationMessageHandler,
+);
+
+conversationRouter.get(
+  "/conversations/:conversationId/messages",
+  authMiddleware,
+  getConversationMessagesHandler,
 );

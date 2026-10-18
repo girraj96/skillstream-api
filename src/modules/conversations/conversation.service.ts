@@ -1,9 +1,12 @@
 import { prisma } from "../../db/prisma";
 import AppError from "../../errors/app-error";
 import { Prisma } from "../../generated/prisma/client";
+import { ChatMessageWhereInput } from "../../generated/prisma/models";
+import { toConversationResponse } from "./conversation.mapper";
 import {
   ConversationInput,
   ConversationMessageInput,
+  ConversationMessagesPaginationInput,
 } from "./conversation.types";
 
 const conversationSelect = {
@@ -119,5 +122,83 @@ export async function sendConversationMessage(
     senderId: message.senderId,
     content: message.body,
     createdAt: message.createdAt,
+  };
+}
+
+export async function getConversationMessages(
+  input: ConversationMessagesPaginationInput,
+  cId: string,
+  uID: string,
+) {
+  const conversationId = Number(cId);
+
+  const userId = Number(uID);
+
+  if (!Number.isInteger(conversationId) || conversationId <= 0) {
+    throw new AppError(400, "Invalid conversation id");
+  }
+
+  if (!Number.isInteger(userId) || userId <= 0) {
+    throw new AppError(401, "Unauthorized");
+  }
+
+  const foundConversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: { id: true },
+  });
+
+  if (!foundConversation) throw new AppError(404, "Conversation not found");
+
+  const membership = await prisma.conversationMember.findUnique({
+    where: {
+      conversationId_userId: {
+        conversationId,
+        userId,
+      },
+    },
+    select: { conversationId: true },
+  });
+
+  if (!membership) {
+    throw new AppError(403, "You are not a member of this conversation");
+  }
+
+  const where: ChatMessageWhereInput = {
+    conversationId,
+  };
+
+  if (input.cursor) {
+    where.id = {
+      lt: input.cursor,
+    };
+  }
+
+  const messages = await prisma.chatMessage.findMany({
+    where,
+    take: input.limit + 1,
+    orderBy: { id: "desc" },
+    select: {
+      id: true,
+      body: true,
+      senderId: true,
+      createdAt: true,
+    },
+  });
+
+  const hasNextPage = messages.length > input.limit;
+  const pageMessages = messages.slice(0, input.limit);
+
+  // The descending query finds the newest page. Its last item is the
+  // oldest message on this page, which becomes the cursor for older messages.
+  const nextCursor = hasNextPage
+    ? (pageMessages[pageMessages.length - 1]?.id ?? null)
+    : null;
+
+  return {
+    data: [...pageMessages].reverse().map(toConversationResponse),
+    meta: {
+      limit: input.limit,
+      nextCursor,
+    },
   };
 }
